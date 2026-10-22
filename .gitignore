@@ -1,0 +1,25 @@
+# Python / notebooks / env
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+.venv/
+venv/
+.env
+*.env
+.cdsapirc
+
+# OS / Office junk
+Thumbs.db
+desktop.ini
+.DS_Store
+~$*
+*.tmp
+
+# EM-DAT: licence forbids redistributing the data or derived databases.
+data/raw/flood_labels/emdat/*.xlsx
+data/raw/flood_labels/emdat/*.xls
+data/raw/flood_labels/emdat/*.csv
+**/*emdat*.csv
+**/*emdat*.parquet
+data/private/*
+!data/private/README.md

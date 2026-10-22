@@ -1,0 +1,9 @@
+data/** -text
+*.csv -text
+*.txt -text
+*.xls binary
+*.xlsx binary
+*.dbf binary
+*.shp binary
+*.shx binary
+*.geojson -text
