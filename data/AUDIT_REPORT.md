@@ -9,8 +9,8 @@ Audit run: 22 Oct 2026. Read-only: no file in `data/` was modified, moved, renam
 FAILs:
 
 - [Extra checks] DATA_NOTES: of 39 level-2-only counties, 26 single-area and 13 multi-area: expected 26 / 13, actual 21 / 18 (total 39); level-2 PCODEs inside the 8 level-1 counties: 15
-- [EM-DAT] of those, empty Admin Units AND Location present (2023-2024): expected 6 (all parseable from Location), actual 5 of 6; no Location text: ['2024-0892-KEN']
-- [EM-DAT] empty Admin Units in any other year (informational): expected none beyond 2023-24, actual all years: 7 empty; by start year {2023: 2, 2024: 4, 2026: 1}; outside 2023-24: ['2026-0153-KEN']
+- [EM-DAT] of those, empty Admin Units AND Location present (2023-2024): expected 6 (all parseable from Location), actual 5 of 6; one event has no Location text
+- [EM-DAT] empty Admin Units in any other year (informational): expected none beyond 2023-24, actual all years: 7 empty; by start year {2023: 2, 2024: 4, 2026: 1}; one of them falls outside 2023-24
 - [DesInventar] years with no DesInventar records (DATA_NOTES says only 2017-2019): expected [2017, 2018, 2019], actual [2004, 2017, 2018, 2019]
 
 ## 2. File integrity
@@ -126,8 +126,8 @@ Extra files not in the list (before this report was written): none. Missing file
 | rows x columns | 2084 x 47 | 2084 x 47 | **PASS** |
 | ISO=KEN & Disaster Type=Flood rows | 56 | 56 | **PASS** |
 | 2023-2024 floods with empty Admin Units | 6 | 6 | **PASS** |
-| of those, empty Admin Units AND Location present (2023-2024) | 6 (all parseable from Location) | 5 of 6; no Location text: ['2024-0892-KEN'] | **FAIL** |
-| empty Admin Units in any other year (informational) | none beyond 2023-24 | all years: 7 empty; by start year {2023: 2, 2024: 4, 2026: 1}; outside 2023-24: ['2026-0153-KEN'] | **FAIL** |
+| of those, empty Admin Units AND Location present (2023-2024) | 6 (all parseable from Location) | 5 of 6; one event has no Location text | **FAIL** |
+| empty Admin Units in any other year (informational) | none beyond 2023-24 | all years: 7 empty; by start year {2023: 2, 2024: 4, 2026: 1}; one of them falls outside 2023-24 | **FAIL** |
 
 ### DesInventar
 
@@ -242,8 +242,8 @@ Extra files not in the list (before this report was written): none. Missing file
 
 ### FAILs (details)
 
-1. **EM-DAT: only 5 of the 6 empty-`Admin Units` floods in 2023-2024 have a `Location` to parse.** There are exactly 6 floods in 2023-2024 with empty `Admin Units` (matches DATA_NOTES), but `2024-0892-KEN` (Dec 2024) has `Location` empty as well (and `GADM Admin Units` is empty too), so it cannot be mapped to counties from the file. The other five (`2023-0721-KEN`, `2023-0187-KEN`, `2024-0150-KEN`, `2024-0210-KEN`, `2024-0247-KEN`) have usable `Location` text. Decide how to treat `2024-0892-KEN` (drop it, or look it up manually). Separately, `2023-0721-KEN` starts Oct 2023 and ends in 2024 with a blank `End Month`, so its span end must be assumed.
-2. **EM-DAT: one more empty-`Admin Units` flood outside 2023-2024.** `2026-0153-KEN` (Mar 2026) has empty `Admin Units`; its `Location` lists all 47 counties. It falls outside the 2000-2025 grid, so it has no effect on the 14,664-row table, but the note "6 of the 2023-2024 ones" is not the whole story (7 empties in total, 56 Kenyan floods, 1 of them in 2026).
+1. **EM-DAT: only 5 of the 6 empty-`Admin Units` floods in 2023-2024 have a `Location` to parse.** There are exactly 6 floods in 2023-2024 with empty `Admin Units` (matches DATA_NOTES), but one event has `Location` empty as well (and `GADM Admin Units` is empty too), so it cannot be mapped to counties from the file. The other five have usable `Location` text. Decide how to treat the event with no location (drop it, or look it up manually). Separately, one event starts in late 2023 and ends in 2024 with a blank `End Month`, so its span end must be assumed. (Event IDs are kept in the private build report only, because of the EM-DAT licence.)
+2. **EM-DAT: one more empty-`Admin Units` flood outside 2023-2024.** One event in 2026 has empty `Admin Units`; its `Location` lists all 47 counties. It falls outside the 2000-2025 grid, so it has no effect on the 14,664-row table, but the note "6 of the 2023-2024 ones" is not the whole story (7 empties in total, 56 Kenyan floods, 1 of them in 2026).
 3. **DesInventar: 2004 also has no records, not just 2017-2019.** Years with at least one flood record: 2002-2003, 2005-2016, 2020-2025 (20 of 24 years). The notes only mention the 2017-2019 gap. If you drop or flag no-data years at modelling time, add 2004.
 4. **Rainfall area counts in DATA_NOTES are wrong.** Of the 39 counties with level-2 rows only, 21 have a single area and 18 (not 13) have several areas needing the n_pixels-weighted mean (the notes say 26 and 13). The rule itself is unaffected, but do not hard-code 13 anywhere; update the note.
 

@@ -1,0 +1,223 @@
+place_raw,place_normalised,pcode,source,note,confidence
+Ahero,ahero,KE042,dfo_detailed_l,Nyando district / its towns are in Kisumu county,certain
+Alego Usonga,alego usonga,KE041,dfo_detailed_l,old district / constituency in Siaya,certain
+Baringo,baringo,KE030,dfo_detailed_l,,certain
+Budalangi,budalangi,KE040,dfo_detailed_l,Budalangi/Bunyala are in Busia county,certain
+Budalangi region,budalangi region,KE040,dfo_detailed_l,generic word(s) dropped from 'budalangi region'; Budalangi/Bunyala are in Busia county,certain
+Bungoma,bungoma,KE039,dfo_detailed_l,,certain
+Bunyala Districts,bunyala,KE040,dfo_detailed_l,Budalangi/Bunyala are in Busia county,certain
+Bunyala South,bunyala south,KE040,dfo_detailed_l,generic word(s) dropped from 'bunyala south'; Budalangi/Bunyala are in Busia county,certain
+Busia,busia,KE040,dfo_detailed_l,,certain
+central Meru,central meru,KE012,dfo_detailed_l,generic word(s) dropped from 'central meru',certain
+Chalbi District,chalbi,KE010,dfo_detailed_l,old district / constituency in Marsabit county,certain
+Changamwe,changamwe,KE001,dfo_detailed_l,Mombasa sub-county / area,certain
+Daadab,daadab,KE007,dfo_detailed_l,Garissa county place / old district,certain
+Dadaab,dadaab,KE007,dfo_detailed_l,Garissa county place / old district,certain
+Dagoretti,dagoretti,KE047,dfo_detailed_l,Nairobi area,certain
+East Baringo,east baringo,KE030,dfo_detailed_l,old district / town in Baringo county,certain
+East Pokot,east pokot,KE030,dfo_detailed_l,old district / town in Baringo county,certain
+Garissa,garissa,KE007,dfo_detailed_l,,certain
+Garsen,garsen,KE004,dfo_detailed_l,Tana River county town / old district,certain
+Garsen Division,garsen division,KE004,dfo_detailed_l,generic word(s) dropped from 'garsen division'; Tana River county town / old district,certain
+Hagadera,hagadera,KE007,dfo_detailed_l,Garissa county place / old district,certain
+Homa Bay,homa bay,KE043,dfo_detailed_l,,certain
+Ifo,ifo,KE007,dfo_detailed_l,Garissa county place / old district,certain
+Isiolo,isiolo,KE011,dfo_detailed_l,,certain
+Kajiado North,kajiado north,KE034,dfo_detailed_l,generic word(s) dropped from 'kajiado north',certain
+Kakamega,kakamega,KE037,dfo_detailed_l,,certain
+Kaloleni,kaloleni,KE003,dfo_detailed_l,old district / town in Kilifi county,certain
+Kerhicho,kerhicho,KE035,dfo_detailed_l,typo for Kericho,certain
+Kiambu District,kiambu,KE022,dfo_detailed_l,,certain
+Kibera,kibera,KE047,dfo_detailed_l,Nairobi area,certain
+Kikambala,kikambala,KE003,dfo_detailed_l,old district / town in Kilifi county,certain
+Kilifi,kilifi,KE003,dfo_detailed_l,,certain
+Kipevu,kipevu,KE001,dfo_detailed_l,Mombasa sub-county / area,certain
+Kisauni,kisauni,KE001,dfo_detailed_l,Mombasa sub-county / area,certain
+Kisauni Division,kisauni division,KE001,dfo_detailed_l,generic word(s) dropped from 'kisauni division'; Mombasa sub-county / area,certain
+Kisii,kisii,KE045,dfo_detailed_l,,certain
+Kisumu,kisumu,KE042,dfo_detailed_l,,certain
+Koibatek,koibatek,KE030,dfo_detailed_l,old district / town in Baringo county,certain
+Kwale,kwale,KE002,dfo_detailed_l,,certain
+Laikipia,laikipia,KE031,dfo_detailed_l,,certain
+Lamu,lamu,KE005,dfo_detailed_l,,certain
+Likoni,likoni,KE001,dfo_detailed_l,Mombasa sub-county / area,certain
+Lower Nyakach Division,lower nyakach division,KE042,dfo_detailed_l,generic word(s) dropped from 'lower nyakach division'; Nyando district / its towns are in Kisumu county,certain
+Machakos,machakos,KE016,dfo_detailed_l,,certain
+Malindi,malindi,KE003,dfo_detailed_l,old district / town in Kilifi county,certain
+Mandera,mandera,KE009,dfo_detailed_l,,certain
+Marsabit District,marsabit,KE010,dfo_detailed_l,,certain
+Marsabit North,marsabit north,KE010,dfo_detailed_l,generic word(s) dropped from 'marsabit north',certain
+Matuga,matuga,KE002,dfo_detailed_l,old district / town in Kwale county,certain
+Merti,merti,KE011,dfo_detailed_l,Merti is in Isiolo county,certain
+Meru Central District,meru central,KE012,dfo_detailed_l,old district in Meru county,certain
+Migori,migori,KE044,dfo_detailed_l,,certain
+Mobasa,mobasa,KE001,dfo_detailed_l,typo for Mombasa,certain
+Mogotio,mogotio,KE030,dfo_detailed_l,old district / town in Baringo county,certain
+Molo District,molo,KE032,dfo_detailed_l,Molo district is in Nakuru county,certain
+Mombasa,mombasa,KE001,dfo_detailed_l,,certain
+Mpeketoni,mpeketoni,KE005,dfo_detailed_l,Lamu county towns,certain
+Muhoroni,muhoroni,KE042,dfo_detailed_l,Nyando district / its towns are in Kisumu county,certain
+Mwatate,mwatate,KE006,dfo_detailed_l,Taita-Taveta towns,certain
+Nairobi,nairobi,KE047,dfo_detailed_l,,certain
+Nairobi area,nairobi area,KE047,dfo_detailed_l,generic word(s) dropped from 'nairobi area',certain
+Nakuru District,nakuru,KE032,dfo_detailed_l,,certain
+Nandi,nandi,KE029,dfo_detailed_l,,certain
+Narok,narok,KE033,dfo_detailed_l,,certain
+North Nyakach,north nyakach,KE042,dfo_detailed_l,generic word(s) dropped from 'north nyakach'; Nyando district / its towns are in Kisumu county,certain
+Nyakach,nyakach,KE042,dfo_detailed_l,Nyando district / its towns are in Kisumu county,certain
+Nyamira,nyamira,KE046,dfo_detailed_l,,certain
+Nyando district,nyando,KE042,dfo_detailed_l,Nyando district / its towns are in Kisumu county,certain
+Nyatike,nyatike,KE044,dfo_detailed_l,old district in Migori county,certain
+Rachuonyo,rachuonyo,KE043,dfo_detailed_l,old district in Homa Bay county,certain
+Rangwe,rangwe,KE043,dfo_detailed_l,old district in Homa Bay county,certain
+Rarieda,rarieda,KE041,dfo_detailed_l,old district / constituency in Siaya,certain
+Samburu,samburu,KE025,dfo_detailed_l,,certain
+Siaya District,siaya,KE041,dfo_detailed_l,,certain
+Taita,taita,KE006,dfo_detailed_l,,certain
+Taita Taveta District,taita taveta,KE006,dfo_detailed_l,,certain
+Tana Delta,tana delta,KE004,dfo_detailed_l,Tana River county town / old district,certain
+Tana River,tana river,KE004,dfo_detailed_l,,certain
+Taveta districts,taveta,KE006,dfo_detailed_l,,certain
+Trans-Nzoia,trans-nzoia,KE026,dfo_detailed_l,,certain
+Turkana,turkana,KE023,dfo_detailed_l,,certain
+Turkana East,turkana east,KE023,dfo_detailed_l,generic word(s) dropped from 'turkana east',certain
+Ugenya,ugenya,KE041,dfo_detailed_l,old district / constituency in Siaya,certain
+Voi,voi,KE006,dfo_detailed_l,Taita-Taveta towns,certain
+Wajir,wajir,KE008,dfo_detailed_l,,certain
+West Karachuonyo,west karachuonyo,KE043,dfo_detailed_l,generic word(s) dropped from 'west karachuonyo'; old district in Homa Bay county,certain
+West Pokot districts,west pokot,KE024,dfo_detailed_l,,certain
+Witu,witu,KE005,dfo_detailed_l,Lamu county towns,certain
+Wundanyi Division,wundanyi division,KE006,dfo_detailed_l,generic word(s) dropped from 'wundanyi division'; Taita-Taveta towns,certain
+Alego-Usonga constituencies,alego-usonga constituencies,KE041,dfo_detailed_l,'alego-usonga' found inside longer text; old district / constituency in Siaya,probable
+Amoni,amoni,KE040,dfo_detailed_l,user-confirmed local knowledge,probable
+Asalo,asalo,KE042,dfo_detailed_l,user-confirmed local knowledge,probable
+Asego Division,asego division,KE043,dfo_detailed_l,user-confirmed local knowledge,probable
+Asing'e,asing'e,KE040,dfo_detailed_l,user-confirmed local knowledge,probable
+Awach River,awach river,KE042,dfo_detailed_l,user-confirmed local knowledge,probable
+Ayweyo,ayweyo,KE042,dfo_detailed_l,user-confirmed local knowledge,probable
+between Malindi,between malindi,KE003,dfo_detailed_l,'malindi' found inside longer text; old district / town in Kilifi county,probable
+Bubisa Village,bubisa village,KE010,dfo_detailed_l,"generic word(s) dropped from 'bubisa village'; Bubisa/Mubisa locality in North Horr, Marsabit",probable
+Budalangi Division of Siaya District,budalangi division of siaya,KE040,dfo_detailed_l,Budalangi is in Busia only (team decision); text wrongly says Siaya District,probable
+Bundalangi area in Nyanza province,bundalangi area in nyanza,KE040,dfo_detailed_l,user-confirmed local knowledge,probable
+Bura,bura,KE004,dfo_detailed_l,small Tana River settlements,probable
+Chepsigot Ward,chepsigot ward,KE028,dfo_detailed_l,user-confirmed local knowledge,probable
+Dunga,dunga,KE042,dfo_detailed_l,Kisumu city settlements (relies on the text saying Kisumu),probable
+Eldume,eldume,KE030,dfo_detailed_l,user-confirmed local knowledge,probable
+Gafarsa,gafarsa,KE011,dfo_detailed_l,user-confirmed local knowledge,probable
+Got Kokech villages,got kokech villages,KE043,dfo_detailed_l,user-confirmed local knowledge,probable
+Hakati,hakati,KE040,dfo_detailed_l,user-confirmed local knowledge,probable
+Hola through Wen,hola through wen,KE004,dfo_detailed_l,'hola' found inside longer text; Tana River county town / old district,probable
+Hweani,hweani,KE004,dfo_detailed_l,user-confirmed local knowledge,probable
+Junda,junda,KE001,dfo_detailed_l,Mombasa locality; spelling variants of Mshomoroni,probable
+Kakola,kakola,KE042,dfo_detailed_l,user-confirmed local knowledge,probable
+Kamolo,kamolo,KE040,dfo_detailed_l,user-confirmed local knowledge,probable
+Kau,kau,KE004,dfo_detailed_l,user-confirmed local knowledge,probable
+Kawadhgone,kawadhgone,KE043,dfo_detailed_l,user-confirmed local knowledge,probable
+Kawadhgone Nyongo,kawadhgone nyongo,KE043,dfo_detailed_l,user-confirmed local knowledge,probable
+Kerio Valley,kerio valley,KE028,dfo_detailed_l,user-confirmed local knowledge,probable
+Kiembeni,kiembeni,KE001,dfo_detailed_l,user-confirmed local knowledge,probable
+Kimorigo,kimorigo,KE006,dfo_detailed_l,user-confirmed local knowledge,probable
+Kisumu's Nyalenda slums,kisumu nyalenda slums,KE042,dfo_detailed_l,'nyalenda' found inside longer text; Kisumu city settlements (relies on the text saying Kisumu),probable
+Kitale Ea,kitale ea,KE026,dfo_detailed_l,'kitale' found inside longer text; Kitale town,probable
+Kochogo,kochogo,KE043,dfo_detailed_l,user-confirmed local knowledge,probable
+Koyugi,koyugi,KE043,dfo_detailed_l,user-confirmed local knowledge,probable
+Madogo Division of Tana River District,madogo division of tana river,KE004,dfo_detailed_l,'tana river' found inside longer text,probable
+Magombe,magombe,KE040,dfo_detailed_l,user-confirmed local knowledge,probable
+Mahoo,mahoo,KE006,dfo_detailed_l,user-confirmed local knowledge,probable
+Makhunda,makhunda,KE040,dfo_detailed_l,user-confirmed local knowledge,probable
+Makunda A,makunda a,KE040,dfo_detailed_l,user-confirmed local knowledge,probable
+Makunda B,makunda b,KE040,dfo_detailed_l,user-confirmed local knowledge,probable
+Malkagala,malkagala,KE010,dfo_detailed_l,user-confirmed local knowledge,probable
+Manyattta,manyattta,KE042,dfo_detailed_l,Kisumu city settlements (relies on the text saying Kisumu),probable
+Marere river in Kinango area of Kwale district,marere river in kinango area of kwale,KE002,dfo_detailed_l,'kinango' found inside longer text; old district / town in Kwale county,probable
+Marigat Division in Baringo District,marigat division in baringo,KE030,dfo_detailed_l,'baringo' found inside longer text,probable
+Marigat District in Rift Valley province,marigat in rift valley,KE030,dfo_detailed_l,'marigat' found inside longer text; old district / town in Baringo county,probable
+Mazeras,mazeras,KE003,dfo_detailed_l,Mazeras is in Kilifi county (Rabai) but text lists it with Kwale/Kilifi,probable
+Mbogoni,mbogoni,KE006,dfo_detailed_l,user-confirmed local knowledge,probable
+Mishoromoni,mishoromoni,KE001,dfo_detailed_l,Mombasa locality; spelling variants of Mshomoroni,probable
+Miwani,miwani,KE042,dfo_detailed_l,user-confirmed local knowledge,probable
+Mnazini,mnazini,KE004,dfo_detailed_l,user-confirmed local knowledge,probable
+Mnazini Bahati,mnazini bahati,KE004,dfo_detailed_l,user-confirmed local knowledge,probable
+Mubisa area,mubisa area,KE010,dfo_detailed_l,"generic word(s) dropped from 'mubisa area'; Bubisa/Mubisa locality in North Horr, Marsabit",probable
+Muranga districts near Mount Kenya,muranga near mount kenya,KE021,dfo_detailed_l,'muranga' found inside longer text; Muranga = spelling variant; Maragua = old district,probable
+Mushomoroni,mushomoroni,KE001,dfo_detailed_l,Mombasa locality; spelling variants of Mshomoroni,probable
+Nairobi river,nairobi river,KE047,dfo_detailed_l,'nairobi' found inside longer text,probable
+Namanjalala,namanjalala,KE026,dfo_detailed_l,user-confirmed local knowledge,probable
+Ng'ambo,ng'ambo,KE030,dfo_detailed_l,user-confirmed local knowledge,probable
+North Horr Constituency,north horr constituency,KE010,dfo_detailed_l,'north horr' found inside longer text; old district / constituency in Marsabit county,probable
+Nyalenda,nyalenda,KE042,dfo_detailed_l,Kisumu city settlements (relies on the text saying Kisumu),probable
+Nzoia River,nzoia river,KE040,dfo_detailed_l,user-confirmed local knowledge,probable
+Ombeyi,ombeyi,KE042,dfo_detailed_l,user-confirmed local knowledge,probable
+Osuret,osuret,KE040,dfo_detailed_l,user-confirmed local knowledge,probable
+Ozi,ozi,KE004,dfo_detailed_l,user-confirmed local knowledge,probable
+Pap Onditi,pap onditi,KE042,dfo_detailed_l,user-confirmed local knowledge,probable
+Pokot Central District,pokot central,KE024,dfo_detailed_l,Pokot Central/North/South districts assumed to be inside West Pokot; plain 'Pokot' is NOT mapped (could be Baringo),probable
+Ramisi,ramisi,KE002,dfo_detailed_l,Ramisi assumed to be Ramisi in Kwale (text pairs it with Kwale),probable
+River Riara from Kiambu town to Githurai area in Nairobi,river riara from kiambu town to githurai area in nairobi,KE022,dfo_detailed_l,'kiambu' found inside longer text,probable
+River Riara from Kiambu town to Githurai area in Nairobi,river riara from kiambu town to githurai area in nairobi,KE047,dfo_detailed_l,'nairobi' found inside longer text,probable
+South West Kano,south west kano,KE042,dfo_detailed_l,generic word(s) dropped from 'south west kano'; Kano plains assumed to be the Kano plains in Nyando/Kisumu,probable
+Uriri districts in South Nyanza,uriri in south nyanza,KE044,dfo_detailed_l,'uriri' found inside longer text; old district in Migori county,probable
+villages neighbouring the Yala Swamp,villages neighbouring the yala swamp,KE041,dfo_detailed_l,user-confirmed local knowledge,probable
+Wagwe,wagwe,KE043,dfo_detailed_l,user-confirmed local knowledge,probable
+Wenje,wenje,KE004,dfo_detailed_l,small Tana River settlements,probable
+western districts of Kisumu,western of kisumu,KE042,dfo_detailed_l,'kisumu' found inside longer text,probable
+Ahantabak,ahantabak,,dfo_detailed_l,locality not in the dictionary,unmapped
+Alikune,alikune,,dfo_detailed_l,locality not in the dictionary,unmapped
+Among'ura,among'ura,,dfo_detailed_l,locality not in the dictionary,unmapped
+Aywey,aywey,,dfo_detailed_l,locality not in the dictionary,unmapped
+Boji,boji,,dfo_detailed_l,locality not in the dictionary,unmapped
+Bomani,bomani,,dfo_detailed_l,locality not in the dictionary,unmapped
+Bondeni,bondeni,,dfo_detailed_l,locality not in the dictionary,unmapped
+Boralgi,boralgi,,dfo_detailed_l,locality not in the dictionary,unmapped
+Bukhay,bukhay,,dfo_detailed_l,locality not in the dictionary,unmapped
+Bula Bahati,bula bahati,,dfo_detailed_l,locality not in the dictionary,unmapped
+Bwalwanga,bwalwanga,,dfo_detailed_l,locality not in the dictionary,unmapped
+Central Kenya,central kenya,,dfo_detailed_l,"province/region/country, not a single county",unmapped
+Coast Province,coast,,dfo_detailed_l,"province/region/country, not a single county",unmapped
+East,east,,dfo_detailed_l,locality not in the dictionary,unmapped
+Eastern Kenya,eastern kenya,,dfo_detailed_l,"province/region/country, not a single county",unmapped
+Eldoro,eldoro,,dfo_detailed_l,locality not in the dictionary,unmapped
+Gulesa,gulesa,,dfo_detailed_l,locality not in the dictionary,unmapped
+Iskadeck,iskadeck,,dfo_detailed_l,locality not in the dictionary,unmapped
+Jarirot Amuma,jarirot amuma,,dfo_detailed_l,locality not in the dictionary,unmapped
+Kabonyo,kabonyo,,dfo_detailed_l,locality not in the dictionary,unmapped
+Kaden,kaden,,dfo_detailed_l,locality not in the dictionary,unmapped
+Kadongo,kadongo,,dfo_detailed_l,locality not in the dictionary,unmapped
+Kadzonzo,kadzonzo,,dfo_detailed_l,locality not in the dictionary,unmapped
+Kasai,kasai,,dfo_detailed_l,locality not in the dictionary,unmapped
+Kayitir,kayitir,,dfo_detailed_l,locality not in the dictionary,unmapped
+Kenya-Ethiopia-Sudan  roads cut,kenya-ethiopia-sudan roads cut,,dfo_detailed_l,locality not in the dictionary,unmapped
+Khajula locations,khajula locations,,dfo_detailed_l,locality not in the dictionary,unmapped
+Khuboyi,khuboyi,,dfo_detailed_l,locality not in the dictionary,unmapped
+Kodhoch,kodhoch,,dfo_detailed_l,locality not in the dictionary,unmapped
+Kongoini,kongoini,,dfo_detailed_l,locality not in the dictionary,unmapped
+Malka,malka,,dfo_detailed_l,locality not in the dictionary,unmapped
+Mara,mara,,dfo_detailed_l,locality not in the dictionary,unmapped
+Marodo,marodo,,dfo_detailed_l,locality not in the dictionary,unmapped
+Moroto,moroto,,dfo_detailed_l,locality not in the dictionary,unmapped
+Naivasha area,naivasha area,,dfo_detailed_l,locality not in the dictionary,unmapped
+Ng'arua,ng'arua,,dfo_detailed_l,locality not in the dictionary,unmapped
+Ngarmara,ngarmara,,dfo_detailed_l,locality not in the dictionary,unmapped
+North Rift,north rift,,dfo_detailed_l,"province/region/country, not a single county",unmapped
+North-Eastern,north-eastern,,dfo_detailed_l,"province/region/country, not a single county",unmapped
+Nyanza Province,nyanza,,dfo_detailed_l,"province/region/country, not a single county",unmapped
+Ongeche,ongeche,,dfo_detailed_l,locality not in the dictionary,unmapped
+Onyege,onyege,,dfo_detailed_l,locality not in the dictionary,unmapped
+Osajai,osajai,,dfo_detailed_l,locality not in the dictionary,unmapped
+parts of North Eastern provinces,parts of north eastern,,dfo_detailed_l,locality not in the dictionary,unmapped
+Rang’ul,rang'ul,,dfo_detailed_l,locality not in the dictionary,unmapped
+Rift Valley Province,rift valley,,dfo_detailed_l,"province/region/country, not a single county",unmapped
+Rongai,rongai,,dfo_detailed_l,ambiguous: Rongai exists in both Nakuru and Kajiado,unmapped
+Sabaki,sabaki,,dfo_detailed_l,locality not in the dictionary,unmapped
+Salabani location,salabani location,,dfo_detailed_l,locality not in the dictionary,unmapped
+Sifuno,sifuno,,dfo_detailed_l,locality not in the dictionary,unmapped
+Sintaan,sintaan,,dfo_detailed_l,locality not in the dictionary,unmapped
+Sitiri,sitiri,,dfo_detailed_l,locality not in the dictionary,unmapped
+Soroko,soroko,,dfo_detailed_l,locality not in the dictionary,unmapped
+surrounding areas,surrounding areas,,dfo_detailed_l,locality not in the dictionary,unmapped
+Tana,tana,,dfo_detailed_l,locality not in the dictionary,unmapped
+Tanzania,tanzania,,dfo_detailed_l,locality not in the dictionary,unmapped
+Wahambla,wahambla,,dfo_detailed_l,locality not in the dictionary,unmapped
+Walwasi,walwasi,,dfo_detailed_l,locality not in the dictionary,unmapped
+Western,western,,dfo_detailed_l,"province/region/country, not a single county",unmapped
+Western Kenya,western kenya,,dfo_detailed_l,"province/region/country, not a single county",unmapped

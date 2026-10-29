@@ -1,0 +1,8 @@
+pandas>=2.1
+numpy>=1.26
+shapely>=2.0
+dbfread>=2.0
+pyshp>=2.3
+openpyxl>=3.0
+xarray>=2023.6
+netCDF4>=1.6
