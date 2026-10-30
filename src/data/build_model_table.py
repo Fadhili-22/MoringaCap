@@ -1,7 +1,8 @@
 """Run every stage in order, assemble the county-month table, run the checks and write the outputs.
 
     python src/data/build_model_table.py                   # everything
-    python src/data/build_model_table.py --skip 08_glofas  # leave a stage out (its interim file is reused if present)
+    python src/data/build_model_table.py --skip 08_glofas  # leave a stage out (its interim file is reused if present;
+                                                           # for 08_glofas on a fresh clone an all-NaN file is written)
 
 Stage order: 00_boundaries 01_grid 02_rainfall 03_neighbours 04_ndvi 05_climate 06_era5land 07_static 08_glofas
 09_labels 10_labels_combined 11_history -> assemble -> 12_checks -> 13_outputs.
@@ -79,7 +80,15 @@ def main():
     LOG_FILE.write_text("", encoding="utf-8")
     for s in PRE:
         if s in a.skip:
-            log("build", f"skipping {s}")
+            if s == "08_glofas" and not (INTERIM / "glofas.csv").exists():
+                # fresh clone: no earlier output to reuse, so write the all-NaN GloFAS file (no .nc is read)
+                log("build", "skipping 08_glofas: no interim/glofas.csv yet, writing the all-NaN placeholder")
+                spec = importlib.util.spec_from_file_location(s, HERE / f"{s}.py")
+                mod = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(mod)
+                mod.run(pending_only=True)
+                continue
+            log("build", f"skipping {s} (its interim file from the last build is reused)")
             continue
         run_stage(s)
     assemble()

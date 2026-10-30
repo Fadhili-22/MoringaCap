@@ -28,13 +28,19 @@ import time
 from datetime import datetime
 
 import cdsapi
+import pandas as pd
 
-OUT_DIR = r"C:\Users\fadhi\OneDrive\Desktop\Moringa Labs\Moringa Capstone Project\data\raw\glofas"
+# data/raw/glofas/scripts/download_glofas.py -> the repo root is four folders up
+REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "..", ".."))
+OUT_DIR = os.path.join(REPO_ROOT, "data", "raw", "glofas")
 LOG = os.path.join(OUT_DIR, "download_log.txt")
 REQUESTS_JSON = os.path.join(OUT_DIR, "requests.json")
 COLLECTION = "cems-glofas-historical"
 MAX_SUBMIT_FAILURES = 3  # consecutive failed submissions of one year before it is reported as missing
 MAX_DOWNLOAD_TRIES = 3
+# valid_time stamps the source does not have: the EWDS constraints for Dec 2024 stop at the 30th, so the 2024 file has no
+# 2025-01-01 step (365, not 366). Nothing else may be missing. Keep in step with src/data/08_glofas.py.
+KNOWN_SOURCE_GAP_VALID_DATES = {"2025-01-01"}
 MAX_RESUBMITS = 2  # a year whose server job failed/was dismissed is submitted again at most this many times
 
 MONTHS = [f"{m:02d}" for m in range(1, 13)]
@@ -85,11 +91,25 @@ def save_ids(ids):
 
 
 def job_year(remote):
-    """The year a server job asked for, or None if it is not a one-year GloFAS request."""
+    """The year a server job covers, or None unless it is exactly our full-year request.
+
+    A job is only re-used if it asks for all 12 months and all 31 day slots of one year, with the same
+    variable, product, version and area as build_request(). (A one-day test job once slipped through a
+    year-only check and produced a 55 KB "2020" file.)
+    """
     req = remote.request
     inputs = req.get("inputs", req) if isinstance(req, dict) else {}
     years = inputs.get("year")
-    return int(years[0]) if isinstance(years, list) and len(years) == 1 else None
+    if not (isinstance(years, list) and len(years) == 1):
+        return None
+    for key, expected in build_request(int(years[0])).items():
+        got = inputs.get(key)
+        if isinstance(expected, list):
+            if not isinstance(got, list) or sorted(map(str, got)) != sorted(map(str, expected)):
+                return None
+        elif got != expected:
+            return None
+    return int(years[0])
 
 
 def adopt_server_jobs(client, ids, years):
@@ -134,6 +154,23 @@ def adopt_server_jobs(client, ids, years):
     save_ids(ids)
 
 
+def missing_valid_dates(nc, year):
+    """Dates a full-year file should hold (valid_time = request date + 1 day: Jan 2 of the year to Jan 1 of the next) but does not."""
+    import netCDF4
+    t = nc.variables["valid_time"]
+    got = {d.strftime("%Y-%m-%d") for d in netCDF4.num2date(t[:], t.units, only_use_cftime_datetimes=False)}
+    want = {d.strftime("%Y-%m-%d") for d in pd.date_range(f"{year}-01-02", f"{year + 1}-01-01")}
+    return sorted(want - got)
+
+
+def short_year_problem(nc, year):
+    """None if the file is a full year (allowing only the known source gap), else a description of what is missing."""
+    missing = [d for d in missing_valid_dates(nc, year) if d not in KNOWN_SOURCE_GAP_VALID_DATES]
+    if not missing:
+        return None
+    return f"{len(missing)} valid_time day(s) missing, e.g. {missing[:3]}"
+
+
 def download(remote, year):
     out = final_path(year)
     tmp = out + ".part"
@@ -143,6 +180,12 @@ def download(remote, year):
         os.remove(tmp)
         log(f"{year}: file appeared during the download, kept the existing one")
         return
+    import netCDF4
+    with netCDF4.Dataset(tmp) as nc:  # header-only check: every day of the year must be there (bar the known source gap)
+        problem = short_year_problem(nc, year)
+    if problem:
+        os.remove(tmp)
+        raise RuntimeError(f"{year}: downloaded file is not a full year: {problem}")
     os.replace(tmp, out)  # only a complete download gets the final name
     log(f"{year}: downloaded {os.path.getsize(out) / 1e6:.1f} MB in {time.time() - t0:.0f}s")
 
@@ -276,8 +319,11 @@ def validate(years):
                 t = nc.variables.get("valid_time")
                 if v is None or t is None:
                     bad.append((y, f"variables {list(nc.variables)}"))
+                elif short_year_problem(nc, y):  # a truncated / test-size file
+                    bad.append((y, short_year_problem(nc, y)))
                 else:
-                    log(f"validate {y}: avg_dis{v.shape}, {t.shape[0]} valid_time steps")
+                    gap = [d for d in missing_valid_dates(nc, y) if d in KNOWN_SOURCE_GAP_VALID_DATES]
+                    log(f"validate {y}: avg_dis{v.shape}, {t.shape[0]} valid_time steps" + (f" (known source gap {gap})" if gap else ""))
         except Exception as e:  # unreadable / truncated file
             bad.append((y, repr(e)))
     log("VALIDATION: all present files readable with avg_dis + valid_time" if not bad else f"VALIDATION PROBLEMS: {bad}")

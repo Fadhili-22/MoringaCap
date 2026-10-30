@@ -6,7 +6,8 @@ Place -> county comes from the confirmed lookup files (data/reference/place_to_c
 import pandas as pd
 
 from common import FIRST_YEAR, INTERIM, LAST_YEAR, PRIVATE, PROCESSED, RAW, codes_to_pcode, load_crosswalk, log
-from place_sources import (admin_unit_names, load_dfo_candidates, load_emdat_floods, load_lookup, lookup_dict)
+from place_sources import (EMDAT_XLSX, LOOKUP_EMDAT, admin_unit_names, load_dfo_candidates, load_emdat_floods, load_lookup,
+                           lookup_dict)
 from placenames import fragments, norm
 
 STAGE = "09_labels"
@@ -89,6 +90,13 @@ def label_emdat(grid, lookup):
         log(STAGE, "EM-DAT file not on this machine: flood_emdat left NaN (public variants are unaffected)")
         return grid[["pcode", "year", "month"]].assign(flood_emdat=pd.array([pd.NA] * len(grid), dtype="Int64")), {}
     m = lookup_dict(lookup, "emdat")
+    if not LOOKUP_EMDAT.exists() or not m:
+        # The EM-DAT file is on this machine but its place -> county lookup is not: every event would map to no
+        # county and flood_emdat would silently be all zero (and flood_this_month would lose EM-DAT with no warning).
+        raise RuntimeError(
+            f"EM-DAT file is present ({EMDAT_XLSX.name}) but the private place lookup is missing or has no EM-DAT rows: "
+            f"{LOOKUP_EMDAT}. Restore it, or rebuild it with `python src/data/09a_place_lookup.py --force` and review it. "
+            "If you do not have the EM-DAT file, remove it from data/raw/flood_labels/emdat/ to build the public table only.")
     cw = load_crosswalk()
     rows, notes = [], {"dropped_no_location": [], "end_month_fixed": [], "outside_grid": [], "no_county": [], "location_parsed": []}
     for _, r in em.iterrows():
@@ -120,7 +128,10 @@ def label_emdat(grid, lookup):
             continue
         rows += [(p, pd.Period(f"{sy}-{sm:02d}", "M"), pd.Period(f"{ey}-{emon:02d}", "M")) for p in pcodes]
     out = flag_months(grid, rows, "flood_emdat")
-    log(STAGE, f"EM-DAT: 56 Kenyan floods; {int(out['flood_emdat'].sum())} county-months flagged "
+    if int(out["flood_emdat"].sum()) == 0:
+        raise RuntimeError(f"EM-DAT labelling produced 0 flagged county-months from {len(em)} events: the lookup does not match "
+                           "the file. Refusing to write an all-zero flood_emdat.")
+    log(STAGE, f"EM-DAT: {len(em)} Kenyan floods; {int(out['flood_emdat'].sum())} county-months flagged "
                f"({len(notes['location_parsed'])} events parsed from Location text)")
     return out, notes
 

@@ -140,15 +140,17 @@ def baseline_mean(df, col):
     return df.join(m, on=["pcode", "month"])["_normal"]
 
 
-def baseline_percentile(df, col):
+def baseline_percentile(df, col, min_years=1):
     """Mid-rank percentile (0-1) of col among the same pcode + calendar month in BASE years.
 
     Ties get the average rank, so a block of identical values (e.g. zero runoff) maps to its middle.
+    A county + calendar month with fewer than min_years baseline values gets NaN (a rank against 1-2 values is
+    meaningless: with one baseline year every rank is 0.0, 0.5 or 1.0).
     """
     out = pd.Series(np.nan, index=df.index)
     for _, g in df.groupby(["pcode", "month"]):
         base = np.sort(g.loc[g["year"].between(BASE_START, BASE_END), col].dropna().to_numpy())
-        if len(base) == 0:
+        if len(base) == 0 or len(base) < min_years:
             continue
         x = g[col].to_numpy()
         lo = np.searchsorted(base, x, side="left")
@@ -198,3 +200,31 @@ def dekads_to_months(d, value_col, how, stage):
     if isinstance(agg, pd.Series):
         agg = agg.rename(value_col)
     return agg.reset_index()
+
+
+def public_label_coverage():
+    """Facts behind the 'public labels thin out after 2018' caveat, computed from the build's own interim files.
+
+    Uses only the EM-DAT-free label columns, so the numbers are safe to print in the public report and dictionary.
+    """
+    src = pd.read_csv(INTERIM / "labels_sources.csv", dtype={"pcode": str})
+    comb = pd.read_csv(INTERIM / "labels_combined.csv", dtype={"pcode": str}, usecols=["year", "flood_this_month_public"])
+    last = {c: int(src.loc[src[c] == 1, "year"].max()) for c in ["flood_desinventar", "flood_gfd", "flood_dfo"]}
+    no_rec = sorted(int(y) for y in src.loc[src["desinventar_no_record_year"] == 1, "year"].unique())
+    f = comb["flood_this_month_public"]
+    tr, te = comb["year"] <= BASE_END, comb["year"] > BASE_END
+    return {"last": last, "no_record_years": no_rec,
+            "train_n": int(f[tr].sum()), "train_share": float(f[tr].mean()),
+            "test_n": int(f[te].sum()), "test_share": float(f[te].mean())}
+
+
+def public_label_coverage_text():
+    c = public_label_coverage()
+    la = c["last"]
+    return (f"In the PUBLIC table (no EM-DAT) the flood labels thin out after {la['flood_gfd']}: the Global Flood Database's last flagged year is "
+            f"{la['flood_gfd']}, DFO's is {la['flood_dfo']}, and DesInventar has no records in {', '.join(map(str, [y for y in c['no_record_years'] if y > 2016]))} "
+            f"(it is the only public source that reaches 2020-2025). So public floods in 2020-2025 are heavily UNDER-COUNTED: "
+            f"{c['test_n']} flagged county-months ({c['test_share']:.1%}) against {c['train_n']} ({c['train_share']:.1%}) in 2000-2019. "
+            "A model trained and tested on the public labels will see a much lower flood rate in the test years than in training, "
+            "so test-period recall, precision and base-rate comparisons are not trustworthy, and a low test flood count does not mean "
+            "fewer floods happened. The private table adds EM-DAT, which covers the recent years, but it may not be shared.")

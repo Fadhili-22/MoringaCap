@@ -10,10 +10,13 @@ Small lakes and dams (e.g. Masinga Reservoir) stay in, so pct_water keeps its ol
 
 Outputs
   data/raw/boundaries/cod_ab/kenya_counties_cod_land.{shp,shx,dbf,prj,cpg}   fields: pcode, county   (upload to EE)
+      built in data/interim/cod_land/ first and copied into data/raw/ ONLY if the content differs from what is there
+      (a rewrite with identical content would still change the .dbf header's last-updated date and dirty git)
   data/reference/kenya_counties.geojson        LAND-ONLY, crosswalk fields; used by adjacency + GloFAS county max
   data/reference/kenya_counties_full.geojson   unclipped COD-AB; for the dashboard map only
 """
 import json
+import shutil
 
 import numpy as np
 import pandas as pd
@@ -23,11 +26,12 @@ from pyproj import Transformer
 from shapely.geometry import mapping, shape
 from shapely.geometry.polygon import orient
 
-from common import RAW, REFERENCE, knbs_land_area, load_crosswalk, log
+from common import INTERIM, RAW, REFERENCE, knbs_land_area, load_crosswalk, log
 
 STAGE = "00_boundaries"
 COD_SHP = RAW / "boundaries" / "cod_ab" / "ken_admin1.shp"
 LAND_SHP = RAW / "boundaries" / "cod_ab" / "kenya_counties_cod_land.shp"
+LAND_TMP = INTERIM / "cod_land" / "kenya_counties_cod_land.shp"
 LAKES_SHP = RAW / "boundaries" / "natural_earth_lakes" / "ne_10m_lakes.shp"
 LAKES_REMOVED = ["Lake Victoria", "Lake Turkana", "Lake Natron"]
 OUT_LAND = REFERENCE / "kenya_counties.geojson"
@@ -100,16 +104,37 @@ def write_geojson(geoms, path):
         json.dump({"type": "FeatureCollection", "features": feats}, f, separators=(",", ":"))
 
 
-def write_land_shapefile(geoms):
+def write_land_shapefile(geoms, shp=LAND_TMP):
+    shp.parent.mkdir(parents=True, exist_ok=True)
     cw = load_crosswalk().set_index("pcode")["county"]
-    with shapefile.Writer(str(LAND_SHP), shapeType=shapefile.POLYGON, encoding="utf-8") as w:
+    with shapefile.Writer(str(shp), shapeType=shapefile.POLYGON, encoding="utf-8") as w:
         w.field("pcode", "C", 5)
         w.field("county", "C", 40)
         for pcode in sorted(geoms):
             w.record(pcode, cw[pcode])
             w.shape(mapping(_orient(geoms[pcode])))
-    LAND_SHP.with_suffix(".prj").write_text(WGS84_PRJ, encoding="ascii")
-    LAND_SHP.with_suffix(".cpg").write_text("UTF-8", encoding="ascii")
+    shp.with_suffix(".prj").write_text(WGS84_PRJ, encoding="ascii")
+    shp.with_suffix(".cpg").write_text("UTF-8", encoding="ascii")
+
+
+def _same_content(a, b):
+    """True if two files hold the same data. For .dbf the header's last-updated date (bytes 1-3) is ignored."""
+    if not (a.exists() and b.exists()):
+        return False
+    x, y = a.read_bytes(), b.read_bytes()
+    if a.suffix == ".dbf":
+        x, y = x[:1] + x[4:], y[:1] + y[4:]
+    return x == y
+
+
+def publish_land_shapefile(src=LAND_TMP, dst=LAND_SHP):
+    """Copy the freshly built shapefile into data/raw/ only for the parts whose content changed. Returns the files written."""
+    written = []
+    for ext in (".shp", ".shx", ".dbf", ".prj", ".cpg"):
+        if not _same_content(src.with_suffix(ext), dst.with_suffix(ext)):
+            shutil.copyfile(src.with_suffix(ext), dst.with_suffix(ext))
+            written.append(dst.with_suffix(ext).name)
+    return written
 
 
 def run():
@@ -138,7 +163,7 @@ def run():
     write_land_shapefile(land)
 
     # read the shapefile back: same features, same areas
-    sf = shapefile.Reader(str(LAND_SHP), encoding="utf-8")
+    sf = shapefile.Reader(str(LAND_TMP), encoding="utf-8")
     assert len(sf) == 47 and [f[0] for f in sf.fields[1:]] == ["pcode", "county"]
     for sr in sf.shapeRecords():
         back = shape(sr.shape.__geo_interface__)
@@ -153,7 +178,9 @@ def run():
     log(STAGE, f"land-only area / KNBS land area: median {ratio['land/knbs'].median():.3f}, min {ratio['land/knbs'].min():.3f}, "
                f"max {ratio['land/knbs'].max():.3f}; sum land {ratio.land.sum():,.0f} vs KNBS {ratio.knbs.sum():,.0f} km2")
     ratio.round(3).to_csv(REFERENCE.parent / "interim" / "boundary_area_check.csv", index=False)
-    log(STAGE, f"wrote {LAND_SHP.name} (+shx/dbf/prj/cpg), {OUT_LAND.name} (land-only, {OUT_LAND.stat().st_size / 1e6:.1f} MB), "
+    written = publish_land_shapefile()
+    log(STAGE, f"{LAND_SHP.name} in data/raw/: " + (f"content changed, rewrote {', '.join(written)}" if written else "unchanged, not rewritten"))
+    log(STAGE, f"wrote {OUT_LAND.name} (land-only, {OUT_LAND.stat().st_size / 1e6:.1f} MB), "
                f"{OUT_FULL.name} (unclipped, for the dashboard map only)")
 
 

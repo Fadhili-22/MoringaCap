@@ -9,7 +9,7 @@ import subprocess
 
 import pandas as pd
 
-from common import (INTERIM, PRIVATE, PROCESSED, PUBLIC_DROP, PUBLIC_RENAME, ROOT, ee_boundary_status, log,
+from common import (public_label_coverage_text, INTERIM, PRIVATE, PROCESSED, PUBLIC_DROP, PUBLIC_RENAME, ROOT, ee_boundary_status, log,
                     to_public)
 
 STAGE = "13_outputs"
@@ -61,8 +61,11 @@ SPEC = [
      "Absolute runoff and % of normal are deliberately not used (ERA5 runoff is unusable in absolute terms). Values outside the 2000-2019 range are 0 or 1"),
     ("discharge_rank", FEATURE, "0-1 percentile", "GloFAS v4.0 consolidated river discharge (DOI 10.24381/cds.a4fdd6b9), `avg_dis`",
      "Real date = valid_time minus 1 day; monthly mean per grid cell; per county the MAX cell centre inside the land-only polygon (the main river); mid-rank percentile among the same county + calendar month in 2000-2019. "
-     "NaN until the glofas_kenya_<year>.nc files are present. Dec 2025 is a 30-day mean (1 Jan 2026 not downloaded)"),
-    ("discharge_rank_lag1", FEATURE, "0-1 percentile", "as discharge_rank", "Previous month's discharge_rank (full series; the 1999 file provides Dec 1999)"),
+     "NaN for a county + calendar month unless at least 15 of the 20 baseline years (2000-2019) are present (a rank against 1-3 years is meaningless), "
+     "and NaN everywhere until the glofas_kenya_<year>.nc files are downloaded. Check the GloFAS line in the build report for the real coverage. "
+     "Known source gap: ECMWF has no GloFAS data for 2024-12-31 (valid_time 2025-01-01), so Dec 2024 is a mean over 30 of 31 days; "
+     "every month is a mean of the days present (no sums are used). Any other missing day stops stage 8 with an error"),
+    ("discharge_rank_lag1", FEATURE, "0-1 percentile", "as discharge_rank", "Previous month's discharge_rank (full series; the 1999 file provides Dec 1999); same 15-baseline-year rule"),
     ("elevation", FEATURE, "m", "SRTM GL1 v003 (USGS/SRTMGL1_003) via Earth Engine, 90 m scale", f"County mean elevation; static. {EE_NOTE}"),
     ("elev_std", FEATURE, "m", "as elevation", "Standard deviation of elevation within the county (renamed from stdDev); static"),
     ("slope", FEATURE, "degrees", "as elevation", "County mean slope; static"),
@@ -117,6 +120,7 @@ def dictionary_md(full_cols, public_cols):
            "(`n_sources`, `flood_this_month`, `flood_corroborated`, `flood_next_month`, `county_flood_rate`). "
            "`data/private/model_table_full.csv` (git-ignored; EM-DAT licence) has all columns.\n",
            "**Roles:** KEY = identifier; FEATURE = usable as a model input; LABEL (not a feature) = flood outcome for the same month or label metadata; TARGET = what we predict (next month).\n",
+           "**Label coverage warning (public table):** " + public_label_coverage_text() + "\n",
            "**Baselines:** every 'normal', percentile and flood-rate uses training years 2000-2019 only. Lags/rolling windows were computed on the full available series before trimming to 2000-2025.\n",
            "**Boundaries:** " + ("all Earth Engine features were computed on the OCHA COD-AB land-only county polygons (Lake Victoria, Lake Turkana and Lake Natron removed; Natural Earth 10m lakes v5.0.0). "
                                if cod else "THIS BUILD still used the legacy DesInventar polygons for these Earth Engine files: "
@@ -141,7 +145,12 @@ def run():
     full = pd.read_csv(INTERIM / "model_table_full.csv", dtype={"pcode": str})
     PRIVATE.mkdir(exist_ok=True)
     PROCESSED.mkdir(exist_ok=True)
-    shutil.copyfile(INTERIM / "model_table_full.csv", PRIVATE / "model_table_full.csv")
+    private_error = None
+    try:
+        shutil.copyfile(INTERIM / "model_table_full.csv", PRIVATE / "model_table_full.csv")
+    except PermissionError as e:  # e.g. the file is open in Excel or being synced by OneDrive
+        private_error = e
+        log(STAGE, f"WARNING: could not write data/private/model_table_full.csv ({e}); writing the other outputs, then failing")
     pub = to_public(full)
     assert not [c for c in pub.columns if "emdat" in c.lower()]
     pub.to_csv(PROCESSED / "model_table_public.csv", index=False)
@@ -156,6 +165,9 @@ def run():
             log(STAGE, f"git check-ignore {p}: {'IGNORED' if r.returncode == 0 else 'NOT IGNORED  <-- problem'}")
     except FileNotFoundError:
         log(STAGE, "git not found: skipped the check-ignore confirmation")
+    if private_error is not None:
+        raise RuntimeError("data/private/model_table_full.csv was NOT updated: it is locked by another program (Excel? OneDrive sync?). "
+                           "Close it and re-run `python src/data/13_outputs.py`. The public table and dictionary were written.") from private_error
 
 
 if __name__ == "__main__":

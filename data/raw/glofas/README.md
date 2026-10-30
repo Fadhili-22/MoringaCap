@@ -27,7 +27,9 @@ One request per year (the form allows one year at a time), Kenya bounding box (n
 }
 ```
 
-The file holds the variable `avg_dis` and a `valid_time` axis. Each daily value is the mean for the day *before* `valid_time`; `08_glofas.py` shifts the date by one day. The last year requested is 2025, so December 2025 is a 30-day mean (no 1 January 2026 value).
+The file holds the variable `avg_dis` and a `valid_time` axis. Each daily value is the mean for the day *before* `valid_time`; `08_glofas.py` shifts the date by one day. So each file runs from 2 January of its year to 1 January of the next, and the 2025 file covers all of 2025.
+
+**Known source gap.** ECMWF has no data for the 2024-12-31 request (the EWDS list of available days for December 2024 stops at the 30th), so `glofas_kenya_2024.nc` has 365 steps instead of 366 and no `valid_time` 2025-01-01. The downloader and `08_glofas.py` allow exactly that one date; any other missing day is an error. December 2024 is therefore a mean over 30 of 31 days.
 
 ## What is in this folder
 - `glofas_kenya_<year>.nc`, one file per year, about 7-9 MB each. **The `.nc` files are NOT in the repo** (git-ignored); download them as below or get them from the team's shared drive.

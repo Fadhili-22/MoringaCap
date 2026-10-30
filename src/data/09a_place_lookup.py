@@ -1,8 +1,14 @@
 """Stage 9a: build data/reference/place_to_county.csv from the DFO, EM-DAT Admin Units and EM-DAT Location text.
 
 This only BUILDS the lookup and writes review files. It is not used for labels until the team confirms it.
-Once confirmed, the CSV is the source of truth (edit it by hand); this script refuses to overwrite it unless
-run with --force.
+Once confirmed, the CSV is the source of truth (edit it by hand); this script refuses to run unless --force is given,
+and --force MERGES instead of overwriting:
+  * an existing row whose confidence is "probable", or whose note says "user-confirmed" (hand-confirmed local
+    knowledge), is PROTECTED: it is kept exactly, and any regenerated row for the same place + source is discarded;
+  * every other existing row for a place the script generates again (certain / unmapped) is replaced by the new one;
+  * existing rows for places the script does not generate are kept (hand-added lines are never dropped).
+The previous file is copied to data/interim/<name>_before_force.csv first; protected rows whose mapping differs
+from what the code would now generate are listed in the log so nobody is surprised.
 
 Outputs
   data/reference/place_to_county.csv       DFO rows only: place_raw, place_normalised, pcode, source, note, confidence
@@ -37,9 +43,46 @@ def event_rows(source, event_id, items, cw):
     return rows
 
 
+def is_protected(df):
+    """Hand-confirmed rows: confidence probable, or a note saying user-confirmed."""
+    return (df["confidence"].str.strip().str.lower().isin(["probable", "user-confirmed"])
+            | df["note"].str.lower().str.contains("user-confirmed", na=False))
+
+
+def merge_into(path, new, label):
+    """Write `new` (freshly generated rows) to `path`, keeping protected rows of the existing file. Returns merged df."""
+    if not path.exists():
+        new.to_csv(path, index=False)
+        return new
+    old = pd.read_csv(path, dtype=str).fillna("")
+    old.to_csv(INTERIM / f"{path.stem}_before_force.csv", index=False)
+    key = ["place_normalised", "source"]
+    prot = old[is_protected(old)]
+    prot_keys = set(map(tuple, prot[key].to_numpy()))
+    old_keys = set(map(tuple, old[key].to_numpy()))
+    new = new.fillna("")
+    new_keys = new[key].apply(tuple, axis=1)
+    fresh = new[~new_keys.isin(prot_keys)]
+    kept_other = old[~is_protected(old) & ~old[key].apply(tuple, axis=1).isin(set(map(tuple, fresh[key].to_numpy())))]
+    merged = (pd.concat([prot, kept_other, fresh], ignore_index=True)
+              .drop_duplicates(LOOKUP_COLS).sort_values(["confidence", "source", "place_normalised"]).reset_index(drop=True))
+    # report protected rows where the code would now say something different
+    gen = new.groupby(key)["pcode"].apply(lambda x: ",".join(sorted(set(x)))).to_dict()
+    differs = [(k, ",".join(sorted(set(prot[(prot[key[0]] == k[0]) & (prot[key[1]] == k[1])]["pcode"]))), gen[k])
+               for k in sorted(prot_keys) if k in gen and gen[k] != ",".join(sorted(set(prot[(prot[key[0]] == k[0]) & (prot[key[1]] == k[1])]["pcode"])))]
+    merged[LOOKUP_COLS].to_csv(path, index=False)
+    log(STAGE, f"{label} MERGE: {len(prot)} protected rows kept ({len(prot_keys)} places), {len(fresh)} regenerated rows written, "
+               f"{len(kept_other)} other existing rows kept, {len(old) - len(prot) - len(kept_other)} replaced; "
+               f"{len(merged)} rows now (was {len(old)}); previous file saved as {path.stem}_before_force.csv")
+    for k, was, would in differs:
+        log(STAGE, f"NOTE protected {label} row {k[1]}:{k[0]!r} kept as {was or 'unmapped'}; the code would now give {would or 'unmapped'}")
+    return merged
+
+
 def run(force=False):
     if OUT.exists() and not force:
-        raise SystemExit(f"{OUT} already exists (it may hold hand-confirmed edits). Re-run with --force to rebuild it.")
+        raise SystemExit(f"{OUT} already exists (it may hold hand-confirmed edits). Re-run with --force to MERGE a fresh "
+                         "build into it (probable / user-confirmed rows are kept as they are).")
     cw = load_crosswalk()
     dfo_rows, em_rows, dropped = [], [], []
 
@@ -83,12 +126,10 @@ def run(force=False):
                .agg(place_raw=("place_raw", "first"), note=("note", "first"), confidence=("confidence", "first")))
         return out[LOOKUP_COLS].sort_values(["confidence", "source", "place_normalised"]).reset_index(drop=True)
 
-    pub = collapse(dfo_df)
-    pub.to_csv(OUT, index=False)
+    pub = merge_into(OUT, collapse(dfo_df), "DFO")
     log(STAGE, f"{OUT.name} (DFO, public): {len(pub)} rows ({(pub.pcode != '').sum()} mapped, {(pub.pcode == '').sum()} unmapped)")
     if len(em_df):
-        priv = collapse(em_df)
-        priv.to_csv(LOOKUP_EMDAT, index=False)
+        priv = merge_into(LOOKUP_EMDAT, collapse(em_df), "EM-DAT")
         log(STAGE, f"{LOOKUP_EMDAT.name} (EM-DAT, private): {len(priv)} rows")
     for m in dropped:
         log(STAGE, "NOTE " + m)
