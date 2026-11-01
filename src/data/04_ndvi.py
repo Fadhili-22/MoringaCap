@@ -13,7 +13,7 @@ SRC = RAW / "ndvi" / "ken-ndvi-subnat-full.csv"
 
 
 def run():
-    dek = wfp_county_dekads(SRC, "vim", STAGE)
+    dek = wfp_county_dekads(SRC, ["vim", "vim_avg"], STAGE)[["pcode", "date", "vim"]]  # vim_avg aggregated, not used
     mon = dekads_to_months(dek, "vim", "mean", STAGE).rename(columns={"vim": "ndvi"})
     first = mon.sort_values(["year", "month"]).iloc[0]
     log(STAGE, f"NDVI series starts {int(first.year)}-{int(first.month):02d}")

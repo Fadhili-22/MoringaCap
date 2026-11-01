@@ -7,23 +7,24 @@ rain_pct_normal is a RATIO (1.0 = normal, 1.25 = 125% of normal).
 import numpy as np
 import pandas as pd
 
-from common import (FIRST_YEAR, INTERIM, LEVEL1_PCODES, RAW, add_lags, baseline_mean, dekads_to_months, log,
+from common import (FIRST_YEAR, INTERIM, RAW, add_lags, baseline_mean, dekads_to_months, log,
                     wfp_county_dekads)
 
 STAGE = "02_rainfall"
 SRC = RAW / "rainfall" / "ken-rainfall-subnat-full.csv"
 
 
-def report_rfh_avg_period():
-    """Find which year window WFP's rfh_avg equals (we do NOT use rfh_avg as a feature)."""
-    d = pd.read_csv(SRC, dtype={"PCODE": str}, usecols=["date", "adm_level", "PCODE", "rfh", "rfh_avg"])
-    d["date"] = pd.to_datetime(d["date"])
+def report_rfh_avg_period(d):
+    """Find which year window WFP's rfh_avg equals (we do NOT use rfh_avg as a feature).
+
+    d = county dekads from wfp_county_dekads(SRC, ["rfh", "rfh_avg"]) (level-2 rows, n_pixels-weighted).
+    """
     best = None
     for pc in ("KE047", "KE004", "KE019"):
-        k = d[(d["PCODE"] == pc) & (d["adm_level"] == 1) & (d["date"].dt.year <= 2025)].copy()
+        k = d[d["pcode"] == pc].copy()
         k["dk"] = k["date"].dt.month * 100 + k["date"].dt.day // 10
         avg = k.groupby("dk")["rfh_avg"].first()
-        assert k.groupby("dk")["rfh_avg"].nunique().max() == 1, "rfh_avg varies within a dekad of the year"
+        assert (k.groupby("dk")["rfh_avg"].agg(lambda s: s.max() - s.min()) < 1e-6).all(), "rfh_avg varies within a dekad of the year"
         res = []
         for a in range(1981, 2012):
             for b in range(a + 9, 2026):
@@ -37,8 +38,9 @@ def report_rfh_avg_period():
 
 
 def run():
-    report_rfh_avg_period()
-    dek = wfp_county_dekads(SRC, "rfh", STAGE)
+    dek = wfp_county_dekads(SRC, ["rfh", "rfh_avg"], STAGE)
+    report_rfh_avg_period(dek)
+    dek = dek[["pcode", "date", "rfh"]]
     mon = dekads_to_months(dek, "rfh", ["sum", "max"], STAGE).rename(columns={"sum": "rain_mm", "max": "rain_max_dekad"})
     mon = add_lags(mon, ["rain_mm"], [1, 2])
     mon = mon.rename(columns={"rain_mm_lag1": "rain_lag1", "rain_mm_lag2": "rain_lag2"})

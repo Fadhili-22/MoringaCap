@@ -4,7 +4,7 @@
 
 This guide explains how the code in `src/data/` turns a pile of downloaded files into one clean table, one row per county per month. It describes what the code **actually does today**, not what was planned. Where the code and the planning notes (`data/DATA_NOTES.md`) differ, the code wins and this guide says so.
 
-It was written on 29 Oct 2026 by reading every file in `src/data/`, `data/DATA_DICTIONARY.md`, `data/processed/build_report.md` and the logs, and by running read-only look-ups against the data files to get real numbers. **No pipeline code was changed or run to write the first version.** A later pass (after the review in this guide) fixed eight things it found; those changes are folded into the sections below.
+It was written on 29 Oct 2026 by reading every file in `src/data/`, `data/DATA_DICTIONARY.md`, `data/processed/build_report.md` and the logs, and by running read-only look-ups against the data files to get real numbers. **No pipeline code was changed or run to write the first version.** A later pass (after the review in this guide) fixed eight things it found; those changes are folded into the sections below. On 1 Nov 2026 the rainfall/NDVI rule changed (the WFP `adm_level` 1 rows turned out to be former provinces, see 3.3); the sections and numbers affected have been updated.
 
 > **How to use this guide.** If you have never built a pipeline, read sections 1 and 2 first (about 15 minutes), then section 4 (one real row, start to finish). Sections 3, 5 and 7 are reference material to come back to when you touch the code. Section 10 has self-check questions.
 
@@ -412,12 +412,12 @@ assert len(grid) == 14664 and not grid.duplicated(["pcode", "year", "month"]).an
 
 ### 3.3 Stage 2: `02_rainfall.py` (CHIRPS rainfall to monthly features)
 
-**The problem.** Rainfall arrives as 10-day totals ("dekads"), split by sub-county for most counties, with duplicate rows for some. We need one clean number per county per month, plus "how wet was this month compared with usual" and the last two months for context.
+**The problem.** Rainfall arrives as 10-day totals ("dekads"), split by sub-county, plus some extra rows for whole provinces that carry a county code. We need one clean number per county per month, plus "how wet was this month compared with usual" and the last two months for context.
 
 **Inputs.** `data/raw/rainfall/ken-rainfall-subnat-full.csv` (133,488 rows, 1981-01 to 2026-10). Key columns: `date`, `adm_level`, `PCODE`, `n_pixels`, `rfh` (rainfall in mm over the dekad).
 
 **Key steps.**
-1. Turn dekads into one value per county per dekad (the level-1/level-2 rule, in `common.wfp_county_dekads`).
+1. Turn dekads into one value per county per dekad (the sub-county rule, in `common.wfp_county_dekads`).
 2. Sum three dekads into a month; also record the wettest dekad.
 3. Compute lags and the 3-month total on the **full 1981-2025 series**, then trim to 2000-2025.
 4. Compute `rain_pct_normal` against the 2000-2019 monthly average.
@@ -425,10 +425,12 @@ assert len(grid) == 14664 and not grid.duplicated(["pcode", "year", "month"]).an
 **Key lines.**
 
 ```python
-dek = wfp_county_dekads(SRC, "rfh", STAGE)
+dek = wfp_county_dekads(SRC, ["rfh", "rfh_avg"], STAGE)
+report_rfh_avg_period(dek)
+dek = dek[["pcode", "date", "rfh"]]
 mon = dekads_to_months(dek, "rfh", ["sum", "max"], STAGE).rename(columns={"sum": "rain_mm", "max": "rain_max_dekad"})
 ```
-- Step 1 and 2 in two calls. `dekads_to_months` insists there are exactly 3 dekads per county-month (it asserts this), then aggregates twice: `sum` is the monthly rainfall in mm, `max` is the largest single dekad.
+- Step 1 and 2. `wfp_county_dekads` builds county values for both `rfh` and WFP's own average `rfh_avg` in one pass; `rfh_avg` is used only by the side-investigation below and then dropped. `dekads_to_months` insists there are exactly 3 dekads per county-month (it asserts this), then aggregates twice: `sum` is the monthly rainfall in mm, `max` is the largest single dekad.
 
 ```python
 mon = add_lags(mon, ["rain_mm"], [1, 2])
@@ -451,16 +453,19 @@ assert len(out) == 14664 and out[cols].notna().all().all()
 
 **Outputs.** `data/interim/rainfall_monthly_full.csv` (just `rain_mm`, 1981-2025; needed by stage 3) and `data/interim/rainfall.csv` (9 columns, 2000-2025).
 
-**Checks.** 3 dekads per county-month; 47 counties; no duplicate dekads; no blank rainfall; 14,664 rows; and a logged range for `rain_pct_normal` (0.122 to 6.179, with 26.1% of county-months above 1.25). Stage 12 later recomputes three county-months from the raw file by hand (section 3.14).
+**Checks.** 3 dekads per county-month; 47 counties; no duplicate dekads; no blank rainfall; 14,664 rows; and a logged range for `rain_pct_normal` (0.117 to 6.179, with 26.1% of county-months above 1.25). Stage 12 later recomputes four county-months from the raw file by hand (section 3.15).
 
-**A side-investigation the stage runs every time.** `report_rfh_avg_period()` works out which years WFP's own average column `rfh_avg` covers, by testing every window of years. The answer logged is **1989-2018**. The pipeline does *not* use `rfh_avg`, because its window (1989-2018) is not our training window (2000-2019), so using it would mix two different definitions of "normal". The window is logged so nobody uses it by mistake.
+**A side-investigation the stage runs every time.** `report_rfh_avg_period(dek)` works out which years WFP's own average column `rfh_avg` covers, by testing every window of years on the county values of three counties (Nairobi, Tana River, Nyeri). The answer logged is **1989-2018**. The pipeline does *not* use `rfh_avg`, because its window (1989-2018) is not our training window (2000-2019), so using it would mix two different definitions of "normal". The window is logged so nobody uses it by mistake.
 
-**Decisions behind it: the level-1 / level-2 rainfall rule.** The WFP file has two kinds of rows. **Level 1** rows describe a whole county. **Level 2** rows describe sub-counties (the second administrative level). Most counties have only level-2 rows. Eight counties (Tana River KE004, Wajir KE008, Marsabit KE010, Nyeri KE019, Turkana KE023, Kakamega KE037, Homa Bay KE043, Nairobi KE047) have *both*, and adding them would double-count the rain. The rule, in `common.py`:
-- the 8 counties use their **level-1 row only**;
-- the other 39 use their level-2 rows, matched to a county by the **first five characters of the level-2 code** (`KE042241` belongs to `KE042`) and combined as a mean **weighted by `n_pixels`** (how many satellite pixels each sub-county covers, so a big area counts more than a tiny one);
-- the 15 level-2 areas that sit inside the 8 level-1 counties are ignored.
+**Decisions behind it: the sub-county rainfall rule (changed 1 Nov 2026).** The WFP file has two kinds of rows, marked by `adm_level`. **Level 2** rows describe sub-counties, and every one of the 47 counties has them. **Level 1** rows exist for only eight codes (KE004, KE008, KE010, KE019, KE023, KE037, KE043, KE047), and they are **not counties**: they are Kenya's former **provinces**, labelled with one county's code. You can see it from the pixel counts (one pixel is about 30.8 km²): the `KE023` row has 5,604 pixels, about 172,600 km², which is the old Rift Valley province, not Turkana (68,111 km²). The `KE019` row is about 13,150 km², Central province, not Nyeri (3,350 km²). Only Nairobi's row matches its county, because Nairobi was its own province.
 
-The log confirms the split: 39 level-2-only counties, of which 21 have a single area and 18 need weighting.
+The rule, in `common.py`:
+- **drop every `adm_level` 1 row**;
+- build **all 47 counties from their level-2 rows**, matched to a county by the **first five characters of the level-2 code** (`KE042241` belongs to `KE042`) and combined as a mean **weighted by `n_pixels`** (how many satellite pixels each sub-county covers, so a big area counts more than a tiny one).
+
+The old rule used the level-1 row for those eight counties, so they got the rain of a whole province. Turkana came out at **716 mm a year instead of about 305**, the 12th driest county instead of the driest. Rain-based features for neighbouring counties were affected too. The log confirms the new split: 12,960 province rows dropped; 47 counties from 73 sub-county areas, 26 counties with a single area and 21 needing weighting.
+
+**Known limitation: some sub-counties seem to be filed under the wrong county.** Summing each county's level-2 pixels (x 30.8 km²) and comparing with its land area from WorldCover gives a ratio of 0.93 to 1.07 for 39 counties. Two pairs stand out, and in each pair one county is short by about what its neighbour has extra, so some sub-counties appear to be filed under the neighbouring county: **Kiambu 0.51 and Murang'a 1.44**, and **Kericho 0.82 and Bomet 1.19**. Their rainfall is therefore partly the neighbour's. **Mombasa 1.31, Nairobi 1.13 and Turkana 0.85** are treated as edge effects: in the two small counties whole pixels overhang the border or the sea, and Turkana's shortfall is not traced to a neighbour (no neighbour shows a matching excess). This is not fixed; recomputing rainfall for the county polygons in Earth Engine is a separate decision.
 
 **Decision: the dekads-sum-to-month choice.** `rfh` is rainfall in mm over a dekad, so a month's rain is the sum of its three dekads (`DATA_NOTES.md` notes it equals the last dekad's `r1h` column, a useful cross-check).
 
@@ -522,7 +527,7 @@ assert len(out) == 14664 and out.notna().all().all()
 
 **Inputs.** `data/raw/ndvi/ken-ndvi-subnat-full.csv` (column `vim`) and `grid.csv`.
 
-**Key steps.** Reuse the same county/dekad rule; average (not sum) the three dekads; compute a ratio to the same-month average; merge onto the grid, leaving the early months blank.
+**Key steps.** Reuse the same county/dekad rule (`wfp_county_dekads(SRC, ["vim", "vim_avg"], STAGE)`, level-2 rows only; `vim_avg` is aggregated but not used); average (not sum) the three dekads; compute a ratio to the same-month average; merge onto the grid, leaving the early months blank.
 
 **Key lines.**
 
@@ -1072,7 +1077,7 @@ out = out[COLUMN_ORDER].sort_values(key).reset_index(drop=True)
 | Check | If it fails |
 |---|---|
 | Structure: 14,664 rows, no duplicate keys, 47 pcodes equal to the crosswalk, 312 months each, years 2000-2025 | **raises**, build stops |
-| `rain_mm` recomputed from the raw CHIRPS file for 3 random county-months (the third forced onto a multi-area weighted county), tolerance 1e-6 | **raises** |
+| `rain_mm` recomputed from the raw CHIRPS file (level-2 rows only) for 4 county-months: 2 random, 1 forced onto a multi-area weighted county, 1 forced onto Turkana `KE023` (a code that also has a province row), tolerance 1e-6 | **raises** |
 | Shift checks, every row: each `*_lag` equals the base column shifted back; `rain_3mo_total`; next-month targets equal this-month shifted *forward*; `heavy_rain_next_month`; Dec 2025 targets blank; Jan 2000 lags filled; `oni` equals the raw published ONI of the previous month | **raises** on any `FAIL` |
 | Null counts: lists every column with blanks and whether the count is expected | **reports only** (flags `UNEXPECTED` and logs a warning) |
 | Flood share by source and year, source agreement matrix, seasonal pattern, top-10 counties | **reports only**, for humans to judge |
@@ -1090,7 +1095,7 @@ by_hand, kind = per.sum(), f"{d['PCODE'].nunique()} level-2 area(s), n_pixels-we
 ...
 assert abs(by_hand - got) < 1e-6, f"rain_mm mismatch for {pc} {y}-{mth}"
 ```
-- Recomputes rainfall **with different code** straight from the raw file. Two independent routes to the same number is far stronger evidence than the same code run twice.
+- Recomputes rainfall **with different code** straight from the raw file. Two independent routes to the same number is far stronger evidence than the same code run twice. Every pick, including Turkana, uses the level-2 rows only, so a return to the province rows would fail here.
 
 ```python
 ok, n = same(t[lag_col], g[base].shift(k))
@@ -1166,7 +1171,7 @@ By stage 13 this row has 64 values in `model_table_public.csv`. Here is where ea
 
 ### 4.2 Rainfall: from raw dekads to features (stage 2)
 
-Kisumu has **no level-1 row** in the raw file. It has two level-2 areas, `KE042241` (23 pixels) and `KE042243` (46 pixels). Their first five characters are `KE042`, which is how they are matched to the county.
+Like every county, Kisumu is built from its level-2 (sub-county) rows. It has two level-2 areas, `KE042241` (23 pixels) and `KE042243` (46 pixels). Their first five characters are `KE042`, which is how they are matched to the county.
 
 Raw `rfh` (mm) for April 2024:
 
@@ -1184,7 +1189,7 @@ Raw `rfh` (mm) for April 2024:
 
 ### 4.3 Neighbour rainfall (stage 3)
 
-Kisumu touches five counties. Their April 2024 `rain_mm`: Homa Bay 266.02, Kericho 246.91, Siaya 315.33, Vihiga 299.11, Nandi 232.23. Each gets weight 0.2, so `neighbour_rain` = **271.918 mm**. `neighbour_rain_lag1` (the same average for March) = **148.412 mm**. (Kisumu's own rain, 273 mm, was close to what its neighbours got.)
+Kisumu touches five counties. Their April 2024 `rain_mm`: Homa Bay 253.63, Kericho 246.91, Siaya 315.33, Vihiga 299.11, Nandi 232.23. Each gets weight 0.2, so `neighbour_rain` = **269.441 mm**. `neighbour_rain_lag1` (the same average for March) = **146.153 mm**. (Before the 1 Nov rule change, Homa Bay used the Nyanza province row and these were 266.02, 271.918 and 148.412.) (Kisumu's own rain, 273 mm, was close to what its neighbours got.)
 
 ### 4.4 Vegetation (stage 4)
 
@@ -1300,9 +1305,9 @@ BASE_START, BASE_END = 2000, 2019  # "normal" / rank baseline = training years o
 - `FIRST_YEAR, LAST_YEAR` define the table. `BASE_START, BASE_END` define "training years" for every baseline. Change either and the whole pipeline follows, except for the hard-coded `14664` and `2025` literals listed in section 8.
 
 ```python
-LEVEL1_PCODES = ["KE004", "KE008", "KE010", "KE019", "KE023", "KE037", "KE043", "KE047"]
+WFP_PROVINCE_PCODES = ["KE004", "KE008", "KE010", "KE019", "KE023", "KE037", "KE043", "KE047"]
 ```
-- The eight counties with both level-1 and level-2 rainfall rows (rule in 3.3). `wfp_county_dekads` *asserts* that the level-1 codes in the file equal this list, so if WFP changes its file the build stops and says so.
+- The eight codes that carry an `adm_level` 1 row in the WFP files. Those rows are former provinces, not counties, and are dropped (rule in 3.3). The list is kept only as a guard: `wfp_county_dekads` *asserts* that the level-1 codes in the file equal it, so if WFP changes its file the build stops and says so.
 
 ### 5.2 Small utilities
 
@@ -1408,21 +1413,30 @@ Ties matter for runoff, because many months have zero runoff; mid-rank puts a bl
 
 ### 5.7 The two WFP helpers
 
-**`wfp_county_dekads(path, value_col, stage)`** implements the level-1 / level-2 rule once for both rainfall and NDVI. Three steps, each guarded:
+**`wfp_county_dekads(path, value_col, stage)`** implements the sub-county rule (3.3) once for both rainfall and NDVI: drop the province rows, then build all 47 counties from level-2 rows. `value_col` can be one column or a list (rainfall passes `["rfh", "rfh_avg"]`, NDVI `["vim", "vim_avg"]`), and every column gets the same weighting. Each step is guarded:
 
 ```python
-assert sorted(l1["PCODE"].unique()) == LEVEL1_PCODES, "level-1 county set differs from the agreed list"
-...
+l1 = d[d["adm_level"] == 1]
+assert sorted(l1["PCODE"].unique()) == WFP_PROVINCE_PCODES, "adm_level 1 (province) set differs from the known list"
+l2 = d[d["adm_level"] == 2].copy()
 l2["pcode"] = l2["PCODE"].str[:5]
-...
-l2["w"] = l2[value_col] * l2["n_pixels"]
-g = l2.groupby(["pcode", "date"]).agg(w=("w", "sum"), n=("n_pixels", "sum"))
-l2c = (g["w"] / g["n"]).rename(value_col).reset_index()
+assert l2.groupby("PCODE")["n_pixels"].nunique().max() == 1, "n_pixels varies over time within a level-2 area"
+w = l2[cols].mul(l2["n_pixels"], axis=0).assign(pcode=l2["pcode"], date=l2["date"], n=l2["n_pixels"])
+g = w.groupby(["pcode", "date"]).sum()
+out = g[cols].div(g["n"], axis=0).reset_index()
 ...
 assert out["pcode"].nunique() == 47 and not out.duplicated(["pcode", "date"]).any()
-assert not out[value_col].isna().any()
+assert out.groupby("pcode")["date"].nunique().nunique() == 1, "counties cover different dekads"
+assert not out[cols].isna().any().any()
 ```
-- `str[:5]` cuts `KE042241` to `KE042`. The weighted mean is `sum(value x pixels) / sum(pixels)`. The final asserts say what the output must be: 47 counties, one row per county per dekad, no blanks. Rows from 2026 are dropped first (`d["date"].dt.year <= LAST_YEAR`).
+- The `adm_level` 1 rows are only looked at to check them, never used. `str[:5]` cuts `KE042241` to `KE042`. The weighted mean is `sum(value x pixels) / sum(pixels)`. Rows from 2026 are dropped first (`d["date"].dt.year <= LAST_YEAR`).
+- The safety checks, in order. The build **stops** if:
+  - the set of province codes in the file changes (WFP has restructured the file, so the rule must be re-checked);
+  - a sub-county's `n_pixels` changes over time (the weights would no longer be fixed areas);
+  - the output is not exactly 47 counties with one row per county per dekad;
+  - any county covers a different set of dekads from the others (a county would be missing dekads);
+  - any value is blank.
+- The log line records how many province rows were dropped and how many sub-county areas were used (for rainfall: 12,960 rows dropped, 73 areas).
 
 **`dekads_to_months(d, value_col, how, stage)`** groups dekads into months and asserts every county-month has exactly 3: `assert (n == 3).all()`. `how` is `"sum"` for rainfall and `"mean"` for NDVI.
 
@@ -1584,7 +1598,7 @@ Goal: a fifth source, say `flood_xyz`, from a new file with events (county, star
 | Mistake | What happens | How this repo protects you |
 |---|---|---|
 | **Reading codes as integers.** `pd.read_csv(path)` on a file with `06` or `KE042`. | `06` becomes `6`; joins match nothing or the wrong county. | `dtype=str` everywhere, `pad2`, and `codes_to_pcode` raising on unmapped codes. You are only protected if you use them. |
-| **Joining rainfall on PCODE directly.** | WFP level-2 PCODEs are 8 characters (`KE042241`), county pcodes are 5 (`KE042`), so 39 counties match nothing, and the 8 level-1 counties would double-count their sub-areas. | Use `wfp_county_dekads`; never merge raw WFP rows on `PCODE`. |
+| **Joining rainfall on PCODE directly.** | WFP level-2 PCODEs are 8 characters (`KE042241`), county pcodes are 5 (`KE042`), so the sub-county rows match nothing, and the 8 codes that also have a province (`adm_level` 1) row would silently get a whole province's rain. | Use `wfp_county_dekads`; never merge raw WFP rows on `PCODE`. |
 | **Using next-month data in a feature.** A `shift(-1)`, a centred rolling window (`rolling(3, center=True)`), or a published value that averages the future (ONI). | The model sees the future; test scores are fantastic; live predictions are poor. | `shift_checks` verifies existing lags row by row. A **new** feature needs its own check (7.1 step 4). |
 | **Computing a baseline on all years.** `df["rain_mm"] / df.groupby(...)["rain_mm"].transform("mean")`. | "Normal" includes the test years. | Use `baseline_mean` / `baseline_percentile`, which filter to 2000-2019. |
 | **Treating `county_flood_rate` as safe in a backtest.** | It was computed from 2000-2019 labels, so a fold that tests 2015 has already "seen" 2015-2019. | Documented in the dictionary and the report caveats. Recompute per fold in your modelling code. |
@@ -1644,7 +1658,7 @@ The goal of the project is to predict **next month's** flood risk for each count
 
 ## 9. Glossary
 
-**Admin level (level 1, level 2).** Levels of administrative area. In Kenya, level 1 is the county, level 2 the sub-county. The WFP files contain both, which is why the rainfall rule exists.
+**Admin level (level 1, level 2).** Levels of administrative area. In Kenya today, level 1 is the county and level 2 the sub-county. In the WFP files, though, the `adm_level` 1 rows are the former provinces (labelled with a county code), so the pipeline drops them and builds every county from its level-2 rows (3.3).
 
 **Assert.** A line of Python that stops the program with an error if its condition is false. The pipeline's main safety mechanism.
 
@@ -1789,7 +1803,7 @@ Try to answer in a sentence or two before you read the answers.
 
 ### Answers
 
-1. WFP's level-2 PCODEs are longer (`KE042241`, `KE042243`) than the county pcode (`KE042`), so a direct join matches nothing for the 39 level-2-only counties. For the 8 counties that have both level-1 and level-2 rows, a direct join would also pick up the sub-areas and double-count. The correct route is `wfp_county_dekads`: use level 1 alone for the 8 counties; for the rest, take the first 5 characters of the PCODE and combine sub-areas as a mean weighted by `n_pixels`.
+1. WFP's level-2 PCODEs are longer (`KE042241`, `KE042243`) than the county pcode (`KE042`), so a direct join matches none of the sub-county rows. For the 8 codes that also have an `adm_level` 1 row, a direct join would pick up that row, which is a whole former province (for `KE023`, all of Rift Valley), not the county. The correct route is `wfp_county_dekads`: drop the `adm_level` 1 rows, take the first 5 characters of each level-2 PCODE and combine the sub-counties as a mean weighted by `n_pixels`.
 2. The table is right for its purpose. NOAA labels each 3-month average by its centre month, so the published April value averages March, April and May and contains May. Stage 5 shifts ONI forward one month so that the April row holds the published March value (1.26), which uses only data through April. The raw 0.82 appears in the May row.
 3. The "normal" would include the test years 2020-2025, so test data leaks into the features. Baselines must use training years only, 2000-2019 (`baseline_mean`). This also matters for the live pipeline, where "normal" must stay fixed.
 4. The target is next month's flood, and there is no January 2026 row to read it from. `shift(-1)` leaves a blank. A 0 would claim "we know no flood happened", which is false, and would teach a model that the last month of the data is always quiet. The stage asserts that exactly these 47 targets are blank and nothing else.

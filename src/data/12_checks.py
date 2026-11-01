@@ -8,7 +8,7 @@ Hard failures (structure, duplicate keys, shifted-feature mismatches) raise; eve
 import numpy as np
 import pandas as pd
 
-from common import (public_label_coverage_text, FIRST_YEAR, INTERIM, LAST_YEAR, LEVEL1_PCODES, LOG_FILE, PRIVATE, PROCESSED, RAW, ee_boundary_status,
+from common import (public_label_coverage_text, FIRST_YEAR, INTERIM, LAST_YEAR, LOG_FILE, PRIVATE, PROCESSED, RAW, ee_boundary_status,
                     load_crosswalk, log, to_public)
 from place_sources import load_lookup
 
@@ -117,19 +117,16 @@ def rain_by_hand(t):
     raw["date"] = pd.to_datetime(raw["date"])
     rng = np.random.default_rng(20261029)
     l2 = raw[raw["adm_level"] == 2].assign(pc=lambda d: d["PCODE"].str[:5])
-    multi = sorted(l2[~l2["pc"].isin(LEVEL1_PCODES)].groupby("pc")["PCODE"].nunique().loc[lambda s: s > 1].index)
+    multi = sorted(l2.groupby("pc")["PCODE"].nunique().loc[lambda s: s > 1].index)
     picks = [(t["pcode"].iloc[i], int(t["year"].iloc[i]), int(t["month"].iloc[i])) for i in rng.integers(0, len(t), 2)]
     picks.append((multi[rng.integers(0, len(multi))], int(rng.integers(FIRST_YEAR, LAST_YEAR + 1)), int(rng.integers(1, 13))))
+    picks.append(("KE023", int(rng.integers(FIRST_YEAR, LAST_YEAR + 1)), int(rng.integers(1, 13))))  # a former level-1 (province) code
     rows = []
     for pc, y, mth in picks:
         win = (raw["date"].dt.year == y) & (raw["date"].dt.month == mth)
-        if pc in LEVEL1_PCODES:
-            d = raw[win & (raw["adm_level"] == 1) & (raw["PCODE"] == pc)]
-            by_hand, kind = d["rfh"].sum(), "level-1 row"
-        else:
-            d = raw[win & (raw["adm_level"] == 2) & (raw["PCODE"].str[:5] == pc)]
-            per = d.groupby("date").apply(lambda g: (g["rfh"] * g["n_pixels"]).sum() / g["n_pixels"].sum())
-            by_hand, kind = per.sum(), f"{d['PCODE'].nunique()} level-2 area(s), n_pixels-weighted"
+        d = raw[win & (raw["adm_level"] == 2) & (raw["PCODE"].str[:5] == pc)]
+        per = d.groupby("date").apply(lambda g: (g["rfh"] * g["n_pixels"]).sum() / g["n_pixels"].sum())
+        by_hand, kind = per.sum(), f"{d['PCODE'].nunique()} level-2 area(s), n_pixels-weighted"
         got = t[(t["pcode"] == pc) & (t["year"] == y) & (t["month"] == mth)]["rain_mm"].iloc[0]
         rows.append((pc, f"{y}-{mth:02d}", kind, round(by_hand, 4), round(got, 4), f"{abs(by_hand - got):.1e}"))
         assert abs(by_hand - got) < 1e-6, f"rain_mm mismatch for {pc} {y}-{mth}"

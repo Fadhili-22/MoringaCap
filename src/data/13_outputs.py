@@ -16,8 +16,9 @@ STAGE = "13_outputs"
 
 KEY, FEATURE, TARGET, LABEL = "KEY", "FEATURE", "TARGET", "LABEL (not a feature)"
 CHIRPS = "CHIRPS rainfall via WFP/HDX subnational file ken-rainfall-subnat-full.csv, column `rfh`"
-RAIN_RULE = ("8 level-1 counties (KE004, KE008, KE010, KE019, KE023, KE037, KE043, KE047) use their level-1 row only; the other "
-             "39 use level-2 rows matched by the first 5 characters of PCODE, n_pixels-weighted mean per dekad")
+RAIN_RULE = ("All 47 counties use adm_level 2 rows only, matched by the first 5 characters of PCODE, n_pixels-weighted mean per "
+             "dekad. The adm_level 1 rows (KE004, KE008, KE010, KE019, KE023, KE037, KE043, KE047) are former provinces, not "
+             "counties, and are dropped")
 ERA5 = "ERA5-Land monthly aggregates (ECMWF/ERA5_LAND/MONTHLY_AGGR) via Earth Engine, county mean at 1 km"
 WC = "ESA WorldCover 2021 v200 via Earth Engine, county mean at 100 m"
 EE_NOTE = "polygons: OCHA COD-AB land-only (see Boundaries in the header)"
@@ -42,7 +43,7 @@ SPEC = [
     ("neighbour_rain", FEATURE, "mm / month", CHIRPS + "; data/reference/county_adjacency.csv", "Mean rain_mm of the counties whose polygons touch (0.001 deg buffer; land-only COD-AB polygons)"),
     ("neighbour_rain_lag1", FEATURE, "mm / month", "as neighbour_rain", "Previous month's neighbour_rain (full series before trimming)"),
     ("ndvi", FEATURE, "NDVI (dimensionless)", "WFP/HDX subnational vegetation index, column `vim` (ken-ndvi-subnat-full.csv)",
-     f"Mean of the month's 3 dekads; same level-1/level-2 rule as rainfall. Blank before 2002-07 (not filled)"),
+     f"Mean of the month's 3 dekads; same rule as rainfall (adm_level 2 rows only, n_pixels-weighted). Blank before 2002-07 (not filled)"),
     ("ndvi_pct_normal", FEATURE, "ratio (1.0 = normal)", "as ndvi", "ndvi / mean ndvi of the same county + calendar month over the available 2002-07..2019-12 months. Blank before 2002-07"),
     ("oni", FEATURE, "deg C (index)", "NOAA PSL ONI (CPC), oni.csv", "SHIFTED: value at month t = published ONI for month t-1 (the published value is centred on its month and would otherwise include t+1). "
      "-9999 -> NaN. Same for every county"),

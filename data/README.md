@@ -4,11 +4,13 @@ Last updated 22 Oct 2026. Full notes, decisions and the merge plan are in `DATA_
 
 Join key for everything is `pcode` (KE001-KE047). Files that use `COUNTYCO` or `county_code` (DesInventar alphabetical codes) are mapped to `pcode` with `reference/kenya_county_crosswalk.csv` (`desinventar_code`).
 
+**WFP rainfall and NDVI files (changed 1 Nov 2026):** only the `adm_level` 2 rows are used, for all 47 counties. They are grouped by the first 5 characters of `PCODE` and combined as an `n_pixels`-weighted mean. The `adm_level` 1 rows (KE004, KE008, KE010, KE019, KE023, KE037, KE043, KE047) are former provinces that reuse a county code. For example, KE023 covers ~172,600 km2 (Rift Valley), not Turkana's 68,111 km2. So they are dropped. The previous rule used them for those 8 counties and gave them province rainfall. Details in `DATA_NOTES.md`.
+
 ## raw/  (original downloads, never edit these)
 | Folder | File | Role | Coverage |
 |---|---|---|---|
-| rainfall | ken-rainfall-subnat-full.csv | Main input: CHIRPS 10-day rainfall + anomalies (WFP/HDX) | 1981-01 to 2026-10, all 47 counties |
-| ndvi | ken-ndvi-subnat-full.csv | Input: vegetation greenness | 2002-07 to 2026-09 |
+| rainfall | ken-rainfall-subnat-full.csv | Main input: CHIRPS 10-day rainfall + anomalies (WFP/HDX). Use adm_level 2 rows only | 1981-01 to 2026-10, all 47 counties |
+| ndvi | ken-ndvi-subnat-full.csv | Input: vegetation greenness. Use adm_level 2 rows only | 2002-07 to 2026-09 |
 | climate_indices | oni.csv | Input: El Nino index (NOAA PSL). Missing = -9999 | 1950 to 2026-07 |
 | climate_indices | dmi_ersstv6.txt | Input: Indian Ocean Dipole index (ERSSTv6) | 1950 to 2026-08 |
 | flood_labels/emdat | public_emdat_custom_request_2026-10-20.xlsx | Label: large floods; filter ISO=KEN, Disaster Type=Flood | 2000 to 2026 (56 Kenyan floods) |

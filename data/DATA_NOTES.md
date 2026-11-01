@@ -14,8 +14,8 @@ Goal: one table, one row per county per month (47 counties x 2000-2025 = 14,664 
 - All extra factors to be added except dam releases; final selection at the team meeting on Monday 26 Oct.
 
 ## raw/ details
-- rainfall/ken-rainfall-subnat-full.csv: 133,488 rows, 10-day rows (dates on day 1/11/21 = dekad start). 8 counties (KE004, KE008, KE010, KE019, KE023, KE037, KE043, KE047) have BOTH a level-1 county row and level-2 rows: use the level-1 row only for those (else double-counting). Other 39 counties: level-2 only (21 have a single area; 18 need n_pixels-weighted mean). The 8 level-1 counties contain 15 level-2 PCODEs, which must be ignored. No nulls 2000-2025; prelim rows only Sep-Oct 2026. Monthly total = sum of 3 rfh values (= last dekad's r1h).
-- ndvi/ken-ndvi-subnat-full.csv: 70,713 rows, dekadal, columns vim, vim_avg, viq. Same level-1/level-2 rule.
+- rainfall/ken-rainfall-subnat-full.csv: 133,488 rows, 10-day rows (dates on day 1/11/21 = dekad start). **Rule (changed 1 Nov 2026): use adm_level 2 rows ONLY, for all 47 counties.** Group by the first 5 characters of PCODE and take the n_pixels-weighted mean per dekad (of rfh, rfh_avg, vim, vim_avg). Drop every adm_level 1 row. Why: the adm_level 1 rows (KE004, KE008, KE010, KE019, KE023, KE037, KE043, KE047) are former PROVINCES that reuse a county code, not counties. At ~30.8 km2 per pixel, KE023 has 5,604 pixels (~172,600 km2, Rift Valley province) against Turkana's 68,111 km2, and KE019 ~13,150 km2 (Central province) against Nyeri's 3,350 km2. Only Nairobi's row matches its county, because Nairobi was its own province. The old rule (level-1 row for those 8, level-2 for the rest) gave them province rainfall: Turkana averaged 716 mm/yr instead of ~315. The level-2 rows of every county add up to roughly its WorldCover area (level-2 area / WorldCover area is 0.93-1.07 for 39 counties; outliers Kiambu 0.51, Kericho 0.82, Turkana 0.85, Nairobi 1.13, Bomet 1.19, Mombasa 1.31, Murang'a 1.44). Kiambu/Murang'a and Kericho/Bomet look like sub-counties filed under the neighbouring county; not fixed (possible Earth Engine recompute, to be decided). 73 level-2 PCODEs: 26 counties single-area, 21 n_pixels-weighted. No nulls 2000-2025; prelim rows only Sep-Oct 2026. Monthly total = sum of 3 rfh values (= last dekad's r1h).
+- ndvi/ken-ndvi-subnat-full.csv: 70,713 rows, dekadal, columns vim, vim_avg, viq. Same rule as rainfall: adm_level 2 rows only, n_pixels-weighted; adm_level 1 (province) rows dropped.
 - climate_indices/oni.csv: missing coded -9999 (header wrongly says -99.9).
 - flood_labels/desinventar: crosstab, 78 rows x 185 cols; 4 cols per county (level0, DataCards, Deaths, Directly affected). No records in 2004, 2017, 2018, 2019. Use DataCards as the record count (level0 is not a count). Strip leading spaces from the sub-headers. Nyamira has no records.
 - flood_labels/dfo_master_list: 4,029 global floods; 41 Kenyan 1988-2010; location free text in Detailed_L (old district names).
@@ -44,7 +44,7 @@ All keyed by COUNTYCO (string with leading zero) -> pcode via crosswalk.desinven
 
 ## Merge plan
 1. Empty grid: 47 counties x every month 2000-2025.
-2. Rainfall -> county-month (rules above).
+2. Rainfall -> county-month (rules above: level-2 rows only, n_pixels-weighted).
 3. NDVI -> county-month.
 4. ONI, DMI on year-month; replace -9999.
 5. ERA5 soil moisture + runoff_rank; static and GHSL tables via COUNTYCO -> pcode.

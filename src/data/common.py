@@ -16,8 +16,9 @@ PRIVATE = DATA / "private"
 FIRST_YEAR, LAST_YEAR = 2000, 2025
 BASE_START, BASE_END = 2000, 2019  # "normal" / rank baseline = training years only
 
-# Counties that have BOTH a level-1 row and level-2 rows in the WFP files: use level 1 only.
-LEVEL1_PCODES = ["KE004", "KE008", "KE010", "KE019", "KE023", "KE037", "KE043", "KE047"]
+# The WFP files' adm_level 1 rows are former PROVINCES that reuse a county pcode (KE023 = Rift Valley, ~172,600 km2;
+# KE019 = Central), not counties. They are dropped; every county is built from its adm_level 2 rows only.
+WFP_PROVINCE_PCODES = ["KE004", "KE008", "KE010", "KE019", "KE023", "KE037", "KE043", "KE047"]
 
 LOG_FILE = INTERIM / "build_log.txt"
 
@@ -164,29 +165,29 @@ def baseline_percentile(df, col, min_years=1):
 def wfp_county_dekads(path, value_col, stage):
     """WFP/HDX subnational file -> one row per (pcode, dekad date) for the 47 counties.
 
-    Level-1 counties use their level-1 row only; all others use their level-2 rows (matched by
-    the first 5 characters of PCODE) combined as the n_pixels-weighted mean. 2026 rows dropped.
+    Only adm_level 2 rows are used, for all 47 counties: matched to a county by the first 5 characters of PCODE and
+    combined as the n_pixels-weighted mean per dekad. The adm_level 1 rows are former provinces (see
+    WFP_PROVINCE_PCODES) and are dropped. value_col may be one column name or a list. 2026 rows dropped.
     """
-    d = pd.read_csv(path, dtype={"PCODE": str}, usecols=["date", "adm_level", "PCODE", "n_pixels", value_col])
+    cols = [value_col] if isinstance(value_col, str) else list(value_col)
+    d = pd.read_csv(path, dtype={"PCODE": str}, usecols=["date", "adm_level", "PCODE", "n_pixels"] + cols)
     d["date"] = pd.to_datetime(d["date"])
     assert set(d["adm_level"]) <= {1, 2}
     d = d[d["date"].dt.year <= LAST_YEAR]
     l1 = d[d["adm_level"] == 1]
-    assert sorted(l1["PCODE"].unique()) == LEVEL1_PCODES, "level-1 county set differs from the agreed list"
-    l1 = l1.rename(columns={"PCODE": "pcode"})[["pcode", "date", value_col]]
+    assert sorted(l1["PCODE"].unique()) == WFP_PROVINCE_PCODES, "adm_level 1 (province) set differs from the known list"
     l2 = d[d["adm_level"] == 2].copy()
     l2["pcode"] = l2["PCODE"].str[:5]
-    ignored = l2.loc[l2["pcode"].isin(LEVEL1_PCODES), "PCODE"].nunique()
-    l2 = l2[~l2["pcode"].isin(LEVEL1_PCODES)]
-    l2["w"] = l2[value_col] * l2["n_pixels"]
-    g = l2.groupby(["pcode", "date"]).agg(w=("w", "sum"), n=("n_pixels", "sum"))
-    l2c = (g["w"] / g["n"]).rename(value_col).reset_index()
+    assert l2.groupby("PCODE")["n_pixels"].nunique().max() == 1, "n_pixels varies over time within a level-2 area"
+    w = l2[cols].mul(l2["n_pixels"], axis=0).assign(pcode=l2["pcode"], date=l2["date"], n=l2["n_pixels"])
+    g = w.groupby(["pcode", "date"]).sum()
+    out = g[cols].div(g["n"], axis=0).reset_index()
     areas = l2.groupby("pcode")["PCODE"].nunique()
-    log(stage, f"{Path(path).name}: {len(LEVEL1_PCODES)} level-1 counties; {ignored} level-2 PCODEs inside them ignored; "
-               f"{len(areas)} level-2-only counties ({(areas == 1).sum()} single-area, {(areas > 1).sum()} weighted)")
-    out = pd.concat([l1, l2c], ignore_index=True)
+    log(stage, f"{Path(path).name}: {len(l1)} adm_level 1 (province) rows dropped; 47 counties from {l2['PCODE'].nunique()} "
+               f"level-2 areas ({(areas == 1).sum()} single-area, {(areas > 1).sum()} n_pixels-weighted)")
     assert out["pcode"].nunique() == 47 and not out.duplicated(["pcode", "date"]).any()
-    assert not out[value_col].isna().any()
+    assert out.groupby("pcode")["date"].nunique().nunique() == 1, "counties cover different dekads"
+    assert not out[cols].isna().any().any()
     return out
 
 
