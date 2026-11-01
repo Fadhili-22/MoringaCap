@@ -4,7 +4,7 @@ Moringa School Data Science capstone (DSF-PT15, Group 6), October to November 20
 
 **Goal:** predict which of Kenya's 47 counties are likely to flood **next month**, using conditions observed this month: rainfall, soil moisture, vegetation, ocean climate signals and each county's terrain.
 
-**Team:** Mokeira, Fadhili, Frasiah, Myles
+**Team:**  Fadhili, Mokeira, Frasiah, Myles
 
 ## Status
 
