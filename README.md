@@ -11,7 +11,7 @@ Moringa School Data Science capstone (DSF-PT15, Group 6), October to November 20
 | Stage | Status |
 |---|---|
 | Data collection and audit | Done (22 Oct 2026) |
-| County-month modelling table (47 counties x 2000-2025) | In progress |
+| County-month modelling table (47 counties x 2000-2025) | Done (2 Nov 2026) |
 | Models (logistic regression, random forest, XGBoost) | Not started |
 | Streamlit dashboard (county risk map) | Not started |
 
