@@ -9,3 +9,12 @@ xarray>=2023.6
 netCDF4>=1.6
 # only for data/raw/glofas/scripts/download_glofas.py (not needed to build the table):
 cdsapi>=0.7
+
+# notebooks and modelling
+matplotlib==3.9.2
+seaborn>=0.13
+scikit-learn>=1.3
+xgboost>=2.0
+jupyter
+ipykernel
+xlrd>=2.0

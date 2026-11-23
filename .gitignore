@@ -38,3 +38,6 @@ data/raw/boundaries/cod_ab/ken_admin0.*
 data/raw/boundaries/cod_ab/ken_admin2.*
 data/raw/boundaries/cod_ab/ken_adminlines.*
 data/raw/boundaries/cod_ab/ken_adminpoints.*
+
+# duplicate zip of notebooks/2_eda
+notebooks/2_eda.zip

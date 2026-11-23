@@ -124,8 +124,8 @@ Highest-flood calendar months: [5, 4, 11, 12]. Expected peaks are MAM (Mar-May) 
 | county | raw_share | flood_months | county_flood_rate |
 |---|---|---|---|
 | Kisumu | 0.125 | 39 | 0.1461 |
-| Kilifi | 0.09936 | 31 | 0.1233 |
 | Turkana | 0.09936 | 31 | 0.1233 |
+| Kilifi | 0.09936 | 31 | 0.1233 |
 | West Pokot | 0.09295 | 29 | 0.1082 |
 | Homa Bay | 0.09295 | 29 | 0.1157 |
 | Siaya | 0.08974 | 28 | 0.1082 |
@@ -143,7 +143,7 @@ Highest-flood calendar months: [5, 4, 11, 12]. Expected peaks are MAM (Mar-May) 
 | KE010 | 2013-04 | 3 level-2 area(s), n_pixels-weighted | 158.9 | 158.9 | 0.0e+00 |
 | KE020 | 2025-12 | 1 level-2 area(s), n_pixels-weighted | 111 | 111 | 0.0e+00 |
 | KE045 | 2024-08 | 2 level-2 area(s), n_pixels-weighted | 95.08 | 95.08 | 0.0e+00 |
-| KE023 | 2025-03 | 1 level-2 area(s), n_pixels-weighted | 82.62 | 82.62 | 0.0e+00 |
+| KE023 | 2025-03 | 1 level-2 area(s), n_pixels-weighted | 82.62 | 82.62 | 1.4e-14 |
 
 ### No feature uses next-month data (exhaustive checks, every row)
 
@@ -176,44 +176,44 @@ Highest-flood calendar months: [5, 4, 11, 12]. Expected peaks are MAM (Mar-May) 
 - EM-DAT (private source, not redistributed): 4 of 56 events dropped before labelling, by reason: 1 with empty Admin Units and empty Location; 2 with no place mapped to a county; 1 with outside 2000-2025. Event IDs are listed only in the private report.
 
 ```
-23:53:50 [00_boundaries] lake area cut from COD-AB polygons (km2): Lake Turkana / Marsabit 4,920; Lake Turkana / Turkana 2,322; Lake Victoria / Homa Bay 1,514; Lake Victoria / Siaya 1,002; Lake Victoria / Kisumu 584; Lake Victoria / Migori 520; Lake Victoria / Busia 133; Lake Turkana / Samburu 2; Lake Natron / Kajiado 1
-23:53:50 [00_boundaries] land-only area / KNBS land area: median 1.000, min 0.963, max 1.062; sum land 580,578 vs KNBS 580,876 km2
-23:53:50 [00_boundaries] kenya_counties_cod_land.shp in data/raw/: unchanged, not rewritten
-23:53:50 [00_boundaries] wrote kenya_counties.geojson (land-only, 2.3 MB), kenya_counties_full.geojson (unclipped, for the dashboard map only)
-23:53:54 [02_rainfall] RESULT: WFP rfh_avg covers 1989-2018 (long-term mean of rfh per dekad). Not used as a feature.
-23:53:55 [03_neighbours] county_adjacency.csv: 244 directed pairs (122 borders)
-23:53:55 [03_neighbours] neighbour counts: Mombasa=2, Kwale=3, Kilifi=4, Tana River=7, Lamu=2, Taita-Taveta=6, Garissa=4, Wajir=4, Mandera=1, Marsabit=4, Isiolo=8, Meru=8, Tharaka-Nithi=5, Embu=7, Kitui=8, Machakos=8, Makueni=4, Nyandarua=5, Nyeri=7, Kirinyaga=6, Murang'a=6, Kiambu=6, Turkana=4, West Pokot=4, Samburu=5, Trans Nzoia=5, Uasin Gishu=6, Elgeyo-Marakwet=4, Nandi=5, Baringo=8, Laikipia=7, Nakuru=8, Narok=6, Kajiado=7, Kericho=8, Bomet=5, Kakamega=7, Vihiga=4, Bungoma=3, Busia=3, Siaya=4, Kisumu=5, Homa Bay=5, Migori=3, Kisii=5, Nyamira=5, Nairobi=3
-23:53:55 [03_neighbours] NOTE borders < 2 km (possible corner touches, still counted as neighbours): Tana River-Meru 0.2 km; Isiolo-Kitui 0.3 km; Meru-Embu 0.3 km; Meru-Kirinyaga 0.2 km; Tharaka-Nithi-Kirinyaga 0.4 km; Tharaka-Nithi-Nyeri 0.2 km; Embu-Murang'a 0.2 km; Embu-Nyeri 0.3 km; Machakos-Kirinyaga 0.2 km; Narok-Nyamira 0.2 km; Bomet-Kisii 0.3 km
-23:53:55 [03_neighbours] neighbour_rain.csv: 14664 rows
-23:53:55 [05_climate] ONI: 5 values of -9999 set to NaN (all after the 2026-07 last valid month)
-23:53:55 [05_climate] climate.csv: 14664 rows, no nulls
-23:53:55 [06_era5land] era5land_soil_runoff_county_month: using era5land_soil_runoff_county_month_cod.csv (OCHA COD-AB polygons, keyed by pcode)
-23:53:56 [06_era5land] era5land.csv: 14664 rows; runoff_rank min 0.000 max 1.000
-23:53:56 [07_static] Earth Engine boundary source per file: era5land_soil_runoff_county_month=cod, srtm_elevation_slope_county=cod, worldcover_landcover_county=cod, proximity_rivers_water_county=cod, ghsl_builtup_county_5yr=cod
-23:53:56 [07_static] srtm_elevation_slope_county: using srtm_elevation_slope_county_cod.csv (OCHA COD-AB polygons, keyed by pcode)
-23:53:56 [07_static] worldcover_landcover_county: using worldcover_landcover_county_cod.csv (OCHA COD-AB polygons, keyed by pcode)
-23:53:56 [07_static] land-cover shares sum to 0.99996-1.00000 (fractions, not %)
-23:53:56 [07_static] proximity_rivers_water_county: using proximity_rivers_water_county_cod.csv (OCHA COD-AB polygons, keyed by pcode)
-23:53:56 [07_static] dropped river_dist_m and water_dist_m (capped at 5 km, nearly constant)
-23:53:56 [07_static] data/raw/population/ contains: ['county_year_population.csv']
-23:53:56 [07_static] population file: 1222 rows, columns ['county', 'year', 'population', 'land_area_km2', 'density_km2', 'growth_pct_per_yr'], years 2000-2025, 47 counties (an annual SERIES extrapolated from the 2019 census, not a 47-row table)
-23:53:56 [07_static] population names matching the crosswalk exactly: 46/47; only in population file: ['Taita Taveta']; only in crosswalk: ['Taita-Taveta']
-23:53:56 [07_static] MISMATCH resolved by punctuation only: population 'Taita Taveta' -> crosswalk 'Taita-Taveta'
-23:53:56 [07_static] pop_density = 2019 census population / KNBS land_area_km2 (static); national 2019 population 47,564,316; density range 6.5-6246 per km2
-23:53:56 [07_static] ghsl_builtup_county_5yr: using ghsl_builtup_county_5yr_cod.csv (OCHA COD-AB polygons, keyed by pcode)
-23:53:56 [07_static] static_county.csv (47, 21), slow_county_month.csv (14664, 4)
-23:53:57 [08_glofas] 27 GloFAS files, years 1999-2025; missing years inside range: none
-23:54:09 [08_glofas] known source gap, not an error: no GloFAS data for 2024-12-31 (valid_time 2025-01-01); those months are means over their remaining days
-23:54:10 [08_glofas] months with fewer days than the calendar (mean over available days): 2024-12 (30/31)
-23:54:11 [08_glofas] baseline years present per county+month: min 20, max 20; 564/564 county+calendar-months have >= 15 of 20, the rest stay NaN
-23:54:11 [08_glofas] glofas.csv: 14664 rows; 0 NaN discharge_rank
-23:54:14 [09_labels] DesInventar: 333 county-months flagged; no-record years [2000, 2001, 2004, 2017, 2018, 2019] flagged
-23:54:14 [09_labels] GFD: 177 of 358 county-event rows have flooded_km2 >= 1.5; 30 events; 275 county-months flagged
-23:54:16 [09_labels] DFO: 34 Kenyan events in 2000-2025; 33 kept (>=1 place mapped), 1 dropped [3394]; 215 county-months flagged
-23:54:16 [09_labels] labels_sources.csv written
-23:54:16 [10_labels_combined] labels_combined.csv: flood_this_month share 0.073 (public 0.051); corroborated 0.0145 (public 0.0035); heavy_rain_next_month share 0.262
-23:54:16 [11_history] county_flood_rate: national rate 0.0819, county range 0.0112-0.1931 (m=24)
-23:54:16 [11_history] county_flood_rate_public: national rate 0.0649, county range 0.0097-0.1461 (m=24)
+09:39:06 [00_boundaries] lake area cut from COD-AB polygons (km2): Lake Turkana / Marsabit 4,920; Lake Turkana / Turkana 2,322; Lake Victoria / Homa Bay 1,514; Lake Victoria / Siaya 1,002; Lake Victoria / Kisumu 584; Lake Victoria / Migori 520; Lake Victoria / Busia 133; Lake Turkana / Samburu 2; Lake Natron / Kajiado 1
+09:39:06 [00_boundaries] land-only area / KNBS land area: median 1.000, min 0.963, max 1.062; sum land 580,578 vs KNBS 580,876 km2
+09:39:06 [00_boundaries] kenya_counties_cod_land.shp in data/raw/: unchanged, not rewritten
+09:39:06 [00_boundaries] wrote kenya_counties.geojson (land-only, 2.3 MB), kenya_counties_full.geojson (unclipped, for the dashboard map only)
+09:39:08 [02_rainfall] RESULT: WFP rfh_avg covers 1989-2018 (long-term mean of rfh per dekad). Not used as a feature.
+09:39:09 [03_neighbours] county_adjacency.csv: 244 directed pairs (122 borders)
+09:39:09 [03_neighbours] neighbour counts: Mombasa=2, Kwale=3, Kilifi=4, Tana River=7, Lamu=2, Taita-Taveta=6, Garissa=4, Wajir=4, Mandera=1, Marsabit=4, Isiolo=8, Meru=8, Tharaka-Nithi=5, Embu=7, Kitui=8, Machakos=8, Makueni=4, Nyandarua=5, Nyeri=7, Kirinyaga=6, Murang'a=6, Kiambu=6, Turkana=4, West Pokot=4, Samburu=5, Trans Nzoia=5, Uasin Gishu=6, Elgeyo-Marakwet=4, Nandi=5, Baringo=8, Laikipia=7, Nakuru=8, Narok=6, Kajiado=7, Kericho=8, Bomet=5, Kakamega=7, Vihiga=4, Bungoma=3, Busia=3, Siaya=4, Kisumu=5, Homa Bay=5, Migori=3, Kisii=5, Nyamira=5, Nairobi=3
+09:39:09 [03_neighbours] NOTE borders < 2 km (possible corner touches, still counted as neighbours): Tana River-Meru 0.2 km; Isiolo-Kitui 0.3 km; Meru-Embu 0.3 km; Meru-Kirinyaga 0.2 km; Tharaka-Nithi-Kirinyaga 0.4 km; Tharaka-Nithi-Nyeri 0.2 km; Embu-Murang'a 0.2 km; Embu-Nyeri 0.3 km; Machakos-Kirinyaga 0.2 km; Narok-Nyamira 0.2 km; Bomet-Kisii 0.3 km
+09:39:09 [03_neighbours] neighbour_rain.csv: 14664 rows
+09:39:09 [05_climate] ONI: 5 values of -9999 set to NaN (all after the 2026-07 last valid month)
+09:39:09 [05_climate] climate.csv: 14664 rows, no nulls
+09:39:09 [06_era5land] era5land_soil_runoff_county_month: using era5land_soil_runoff_county_month_cod.csv (OCHA COD-AB polygons, keyed by pcode)
+09:39:09 [06_era5land] era5land.csv: 14664 rows; runoff_rank min 0.000 max 1.000
+09:39:09 [07_static] Earth Engine boundary source per file: era5land_soil_runoff_county_month=cod, srtm_elevation_slope_county=cod, worldcover_landcover_county=cod, proximity_rivers_water_county=cod, ghsl_builtup_county_5yr=cod
+09:39:09 [07_static] srtm_elevation_slope_county: using srtm_elevation_slope_county_cod.csv (OCHA COD-AB polygons, keyed by pcode)
+09:39:09 [07_static] worldcover_landcover_county: using worldcover_landcover_county_cod.csv (OCHA COD-AB polygons, keyed by pcode)
+09:39:09 [07_static] land-cover shares sum to 0.99996-1.00000 (fractions, not %)
+09:39:09 [07_static] proximity_rivers_water_county: using proximity_rivers_water_county_cod.csv (OCHA COD-AB polygons, keyed by pcode)
+09:39:09 [07_static] dropped river_dist_m and water_dist_m (capped at 5 km, nearly constant)
+09:39:09 [07_static] data/raw/population/ contains: ['county_year_population.csv']
+09:39:09 [07_static] population file: 1222 rows, columns ['county', 'year', 'population', 'land_area_km2', 'density_km2', 'growth_pct_per_yr'], years 2000-2025, 47 counties (an annual SERIES extrapolated from the 2019 census, not a 47-row table)
+09:39:09 [07_static] population names matching the crosswalk exactly: 46/47; only in population file: ['Taita Taveta']; only in crosswalk: ['Taita-Taveta']
+09:39:09 [07_static] MISMATCH resolved by punctuation only: population 'Taita Taveta' -> crosswalk 'Taita-Taveta'
+09:39:09 [07_static] pop_density = 2019 census population / KNBS land_area_km2 (static); national 2019 population 47,564,316; density range 6.5-6246 per km2
+09:39:09 [07_static] ghsl_builtup_county_5yr: using ghsl_builtup_county_5yr_cod.csv (OCHA COD-AB polygons, keyed by pcode)
+09:39:10 [07_static] static_county.csv (47, 21), slow_county_month.csv (14664, 4)
+09:39:10 [08_glofas] 27 GloFAS files, years 1999-2025; missing years inside range: none
+09:39:22 [08_glofas] known source gap, not an error: no GloFAS data for 2024-12-31 (valid_time 2025-01-01); those months are means over their remaining days
+09:39:23 [08_glofas] months with fewer days than the calendar (mean over available days): 2024-12 (30/31)
+09:39:25 [08_glofas] baseline years present per county+month: min 20, max 20; 564/564 county+calendar-months have >= 15 of 20, the rest stay NaN
+09:39:25 [08_glofas] glofas.csv: 14664 rows; 0 NaN discharge_rank
+09:39:28 [09_labels] DesInventar: 333 county-months flagged; no-record years [2000, 2001, 2004, 2017, 2018, 2019] flagged
+09:39:29 [09_labels] GFD: 177 of 358 county-event rows have flooded_km2 >= 1.5; 30 events; 275 county-months flagged
+09:39:30 [09_labels] DFO: 34 Kenyan events in 2000-2025; 33 kept (>=1 place mapped), 1 dropped [3394]; 215 county-months flagged
+09:39:30 [09_labels] labels_sources.csv written
+09:39:30 [10_labels_combined] labels_combined.csv: flood_this_month share 0.073 (public 0.051); corroborated 0.0145 (public 0.0035); heavy_rain_next_month share 0.262
+09:39:30 [11_history] county_flood_rate: national rate 0.0819, county range 0.0112-0.1931 (m=24)
+09:39:30 [11_history] county_flood_rate_public: national rate 0.0649, county range 0.0097-0.1461 (m=24)
 ```
 
 ## 9. Known caveats

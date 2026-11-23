@@ -2,7 +2,7 @@
 
 *Kenya County Flood Risk Early Warning (Moringa DSF-PT15, Group 6).*
 
-This guide explains how the code in `src/data/` turns a pile of downloaded files into one clean table, one row per county per month. It describes what the code **actually does today**, not what was planned. Where the code and the planning notes (`data/DATA_NOTES.md`) differ, the code wins and this guide says so.
+This guide explains how the code in `src/data/` turns a pile of downloaded files into one clean table, one row per county per month. It describes what the code **actually does today**, not what was planned. Where the code and the early planning notes (`DATA_NOTES.md`, kept only in the original project folder and not copied here) differ, the code wins and this guide says so.
 
 It was written on 29 Oct 2026 by reading every file in `src/data/`, `data/DATA_DICTIONARY.md`, `data/processed/build_report.md` and the logs, and by running read-only look-ups against the data files to get real numbers. **No pipeline code was changed or run to write the first version.** A later pass (after the review in this guide) fixed eight things it found; those changes are folded into the sections below. On 1 Nov 2026 the rainfall/NDVI rule changed (the WFP `adm_level` 1 rows turned out to be former provinces, see 3.3); the sections and numbers affected have been updated.
 
@@ -229,7 +229,7 @@ If the diagram does not render in your viewer, the table in 2.2 carries the same
 
 ### 2.2 The stages in one table
 
-"Time" comes from the timestamps in the last full build log (19:25, 29 Oct 2026). The whole build took about **20 seconds** from `01_grid` to `13_outputs`. Stage 8 will be slower once all 27 GloFAS year-files are present (each is about 8 MB); that has not been timed yet.
+"Time" comes from the timestamps of full builds with all 27 GloFAS year files on disk (27 s and 32 s wall-clock for the whole script on two runs, 2 Nov 2026). The log shows the stages taking about 29 s from `00_boundaries` to `13_outputs`, of which stage 8 (reading 27 files of about 8 MB each) is 14 to 18 s, more than half of the build.
 
 | # | Script | Reads | Writes | Time |
 |---|---|---|---|---|
@@ -241,9 +241,9 @@ If the diagram does not render in your viewer, the table in 2.2 carries the same
 | 5 | `05_climate.py` | `raw/climate_indices/oni.csv`, `dmi_ersstv6.txt`, `grid.csv` | `interim/climate.csv` | under 1 s |
 | 6 | `06_era5land.py` | `raw/earth_engine/era5land_soil_runoff_county_month_cod.csv` | `interim/era5land.csv` | under 1 s |
 | 7 | `07_static.py` | four more Earth Engine `_cod` files, population CSV, `grid.csv` | `interim/static_county.csv` (47 rows), `interim/slow_county_month.csv` | about 1 s |
-| 8 | `08_glofas.py` | `raw/glofas/glofas_kenya_<year>.nc`, `kenya_counties.geojson`, `grid.csv` | `interim/glofas_county_month_max.csv`, `interim/glofas.csv` | about 2 s with 2 files; longer with 27 (untimed) |
+| 8 | `08_glofas.py` | `raw/glofas/glofas_kenya_<year>.nc`, `kenya_counties.geojson`, `grid.csv` | `interim/glofas_county_month_max.csv`, `interim/glofas.csv` | about 14-18 s with all 27 files (about 2 s with 2 files) |
 | 9a | `09a_place_lookup.py` | DFO `.dbf`, EM-DAT `.xlsx` | `reference/place_to_county.csv`, `private/place_to_county_emdat.csv`, review CSVs | **not in the build**; run by hand |
-| 9 | `09_labels.py` | `processed/desinventar_floods_county_month.csv`, GFD CSV, DFO `.dbf`, EM-DAT `.xlsx` (optional), both place lookups, `grid.csv` | `interim/labels_sources.csv`, `private/emdat_event_notes.csv` | about 5 s |
+| 9 | `09_labels.py` | `processed/desinventar_floods_county_month.csv`, GFD CSV, DFO `.dbf`, EM-DAT `.xlsx` (optional), both place lookups, `grid.csv` | `interim/labels_sources.csv`, `private/emdat_event_notes.csv` | about 2-5 s |
 | 10 | `10_labels_combined.py` | `labels_sources.csv`, `rainfall.csv` | `interim/labels_combined.csv` | under 1 s |
 | 11 | `11_history.py` | `labels_combined.csv` | `interim/history.csv` | under 1 s |
 | - | *assemble* (in `build_model_table.py`) | the nine feature files + `static_county.csv` | `interim/model_table_full.csv` (14,664 x 70) | about 1 s |
@@ -406,7 +406,7 @@ assert len(grid) == 14664 and not grid.duplicated(["pcode", "year", "month"]).an
 
 **Outputs.** `data/interim/grid.csv` (14,664 rows: `pcode, county, year, month, season, month_sin, month_cos`).
 
-**Decisions.** Build the *full* grid even for months where some inputs are blank (NDVI before 2002-07). Whether to drop those rows is a modelling decision left for later (`DATA_NOTES.md`), not a cleaning decision.
+**Decisions.** Build the *full* grid even for months where some inputs are blank (NDVI before 2002-07). Whether to drop those rows is a modelling decision, not a cleaning decision. The team has since decided to start modelling rows at 2002-07 (see the README).
 
 ---
 
@@ -467,7 +467,7 @@ The old rule used the level-1 row for those eight counties, so they got the rain
 
 **Known limitation: some sub-counties seem to be filed under the wrong county.** Summing each county's level-2 pixels (x 30.8 km²) and comparing with its land area from WorldCover gives a ratio of 0.93 to 1.07 for 39 counties. Two pairs stand out, and in each pair one county is short by about what its neighbour has extra, so some sub-counties appear to be filed under the neighbouring county: **Kiambu 0.51 and Murang'a 1.44**, and **Kericho 0.82 and Bomet 1.19**. Their rainfall is therefore partly the neighbour's. **Mombasa 1.31, Nairobi 1.13 and Turkana 0.85** are treated as edge effects: in the two small counties whole pixels overhang the border or the sea, and Turkana's shortfall is not traced to a neighbour (no neighbour shows a matching excess). This is not fixed; recomputing rainfall for the county polygons in Earth Engine is a separate decision.
 
-**Decision: the dekads-sum-to-month choice.** `rfh` is rainfall in mm over a dekad, so a month's rain is the sum of its three dekads (`DATA_NOTES.md` notes it equals the last dekad's `r1h` column, a useful cross-check).
+**Decision: the dekads-sum-to-month choice.** `rfh` is rainfall in mm over a dekad, so a month's rain is the sum of its three dekads (the early planning notes pointed out that it equals the last dekad's `r1h` column, a useful cross-check; `docs/AUDIT_REPORT.md` confirms it for Nairobi, April 2024).
 
 ---
 
@@ -926,7 +926,7 @@ if em is None:
 **Checks.** DesInventar: no duplicate county-months, record count consistent with the `flood_occurred` column, empty years equal the agreed list. GFD/EM-DAT: every county code must map. EM-DAT: exactly 56 Kenyan floods (an assert in `place_sources.py`). Final merge: 14,664 rows, no duplicate keys. Today's numbers: DesInventar 333 county-months, GFD 275, DFO 215.
 
 **Decisions.**
-- *The GFD threshold of 1.5 km²* (a team decision in `DATA_NOTES.md`).
+- *The GFD threshold of 1.5 km²* (a team decision, recorded in the comment at the top of `09_labels.py`).
 - *Flag every month from start to end*, not just the start month.
 - *EM-DAT events with no place in a county are dropped*, not guessed.
 - *A county is flagged flooded for any flood anywhere in it*: a flood in one corner of huge Turkana labels the whole county (a stated limitation in the README).
@@ -1224,7 +1224,7 @@ These are the same on every Kisumu row except `pct_built`:
 
 ### 4.8 River discharge (stage 8)
 
-`discharge_rank` and `discharge_rank_lag1` are **blank (NaN)** for this row. There is no 2024 GloFAS file yet, and the stage can only fill months it has data for. Even after you download everything, nothing about the pipeline changes: the row fills in on the next build.
+`discharge_rank` = **1.000** and `discharge_rank_lag1` = **0.900** for this row. All 27 GloFAS year files (1999-2025) are on disk, so the stage fills every county-month. The raw monthly maximum discharge for Kisumu is 276.2 m3/s in April 2024 (70.9 in March, 307.6 in May), higher than every one of the 20 baseline Aprils (2000-2019), so the percentile rank is 1.000. March 2024 ranks 0.90, which is the lag. (Earlier versions of this guide said these cells were blank because the 2024 file had not been downloaded yet; that is no longer true.)
 
 ### 4.9 County flood history (stage 11)
 
@@ -1503,7 +1503,7 @@ You can also run one stage alone, for example `python src/data/02_rainfall.py`, 
    `WARNING` lines do not stop the build; you have to read them. `NOT IGNORED` means a private file would be committed.
 2. **`data/processed/build_report.md`** (public). Open it in this order:
    - section 1 *Structure*: everything must say `PASS`;
-   - section 2 *Null counts*: every row should say `as expected`. Today `discharge_rank` shows "check: is it the expected GloFAS coverage?", which is the partial-GloFAS problem;
+   - section 2 *Null counts*: every row should say `as expected`. With all 27 GloFAS files present `discharge_rank` has no nulls and does not appear in that table; if it ever reappears there, GloFAS coverage is partial;
    - section 7 *Sanity checks*: the by-hand rainfall table (difference 0) and the no-future-data table (all `PASS`);
    - sections 3-6 for the flood shares, seasons and top counties: a human judgement about whether they make sense (for example floods should peak in March-May and October-December).
 3. **`data/private/build_report_full.md`**: the same with EM-DAT included, plus how each EM-DAT event was handled. Never paste from it into anything public.
@@ -1556,7 +1556,7 @@ Goal: a column `rain_6mo_total` (this month plus the five before it).
 
 Goal: count a Global Flood Database flood only if at least 3 km² flooded (instead of 1.5).
 
-**Edit:** one line in `09_labels.py`: `GFD_MIN_KM2 = 1.5`. Then also update the human-readable copies of the rule, or the documentation will lie: the `flood_gfd` row in `SPEC` in `13_outputs.py` (it says `flooded_km2 >= 1.5`), and `data/DATA_NOTES.md`.
+**Edit:** one line in `09_labels.py`: `GFD_MIN_KM2 = 1.5`. Then also update the human-readable copies of the rule, or the documentation will lie: the `flood_gfd` row in `SPEC` in `13_outputs.py` (it says `flooded_km2 >= 1.5`), and the README if it mentions the threshold.
 
 **Re-run:** the full build. Everything downstream (`flood_gfd_dfo`, `n_sources`, `flood_this_month`, `flood_corroborated`, `flood_next_month`, `county_flood_rate`) changes automatically, because it all derives from `flood_gfd`.
 
@@ -1577,7 +1577,7 @@ Goal: count a Global Flood Database flood only if at least 3 km² flooded (inste
 - Section 5 and 6: are the seasonal peaks and the top counties still plausible?
 - The number that matters most for modelling: the flood rate (`flood_this_month` share, logged in `10_labels_combined`). Raising the threshold makes floods rarer, which changes class balance for every model.
 
-A stricter threshold is not "more correct"; it trades missed small floods against false alarms. Record why you chose it in `DATA_NOTES.md`.
+A stricter threshold is not "more correct"; it trades missed small floods against false alarms. Record why you chose it in the README.
 
 ### 7.3 Worked example: add a new flood source
 
